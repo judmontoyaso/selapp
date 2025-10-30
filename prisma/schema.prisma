@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para Sermones/Predicaciones
+model Sermon {
+  id          String   @id @default(uuid())
+  title       String   // Título del sermón
+  pastor      String   // Nombre del pastor
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  messages    Message[] // Mensajes del sermón
+  
+  @@map("sermons")
+}
+
+// Modelo para Mensajes (como chat)
+model Message {
+  id          String   @id @default(uuid())
+  sermonId    String
+  content     String   @db.Text // Texto del mensaje
+  order       Int      // Orden del mensaje en el sermón
+  createdAt   DateTime @default(now())
+  
+  sermon      Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  images      Image[]  // Imágenes adjuntas al mensaje
+  
+  @@index([sermonId, order])
+  @@map("messages")
+}
+
+// Modelo para Imágenes
+model Image {
+  id          String   @id @default(uuid())
+  messageId   String
+  url         String   // URL de la imagen en Supabase Storage
+  fileName    String   // Nombre original del archivo
+  fileSize    Int      // Tamaño en bytes
+  createdAt   DateTime @default(now())
+  
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@index([messageId])
+  @@map("images")
+}
