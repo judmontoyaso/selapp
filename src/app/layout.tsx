@@ -5,8 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Notas de Predicación",
-  description: "Aplicación para guardar notas de sermones como mensajes",
+  title: "selapp — Devocionales y Notas",
+  description:
+    "Selapp: devocionales diarios y notas de predicación con un diseño elegante, cálido y moderno.",
 };
 
 export default function RootLayout({

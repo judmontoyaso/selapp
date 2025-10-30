@@ -1,8 +1,8 @@
 # 🎉 ¡Proyecto Creado Exitosamente!
 
-## Tu Aplicación PWA de Devocionales y Notas
+## selapp — Tu PWA de Devocionales y Notas
 
-¡Felicidades! Tu aplicación Next.js PWA ha sido creada completamente. Aquí está todo lo que necesitas saber para empezar.
+¡Felicidades! selapp ha sido creada y está lista. A continuación encontrarás lo esencial para empezar a usarla y probarla en tu dispositivo.
 
 ---
 

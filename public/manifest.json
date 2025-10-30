@@ -1,7 +1,7 @@
 {
-  "name": "Devocionales y Notas",
-  "short_name": "Devocionales",
-  "description": "Aplicación para devocionales diarios y notas de predicación",
+  "name": "selapp — Devocionales y Notas",
+  "short_name": "selapp",
+  "description": "Selapp: devocionales diarios y notas de predicación. Diseño elegante, cálido y moderno.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

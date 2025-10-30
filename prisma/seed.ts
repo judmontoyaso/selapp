@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const p: any = prisma;
 
 async function main() {
   console.log('🌱 Poblando base de datos...');
 
   // Crear usuario de ejemplo
-  const user = await prisma.user.upsert({
+  const user = await p.user.upsert({
     where: { email: 'usuario@ejemplo.com' },
     update: {},
     create: {
@@ -18,7 +19,7 @@ async function main() {
 
   // Crear versículos de ejemplo
   const verses = await Promise.all([
-    prisma.verse.upsert({
+    p.verse.upsert({
       where: { book_chapter_verse_version: { book: 'Juan', chapter: 3, verse: 16, version: 'RVR1960' } },
       update: {},
       create: {
@@ -31,7 +32,7 @@ async function main() {
         topic: 'Amor de Dios',
       },
     }),
-    prisma.verse.upsert({
+  p.verse.upsert({
       where: { book_chapter_verse_version: { book: 'Filipenses', chapter: 4, verse: 13, version: 'RVR1960' } },
       update: {},
       create: {
@@ -44,7 +45,7 @@ async function main() {
         topic: 'Fortaleza',
       },
     }),
-    prisma.verse.upsert({
+  p.verse.upsert({
       where: { book_chapter_verse_version: { book: 'Salmos', chapter: 23, verse: 1, version: 'RVR1960' } },
       update: {},
       create: {
@@ -57,7 +58,7 @@ async function main() {
         topic: 'Confianza',
       },
     }),
-    prisma.verse.upsert({
+  p.verse.upsert({
       where: { book_chapter_verse_version: { book: 'Proverbios', chapter: 3, verse: 5, version: 'RVR1960' } },
       update: {},
       create: {
@@ -74,7 +75,7 @@ async function main() {
   console.log(`✅ ${verses.length} versículos creados`);
 
   // Crear devocional de ejemplo
-  const devotional = await prisma.devotional.create({
+  const devotional = await p.devotional.create({
     data: {
       title: 'El Amor Incondicional de Dios',
       topic: 'Amor de Dios',
@@ -104,7 +105,7 @@ Este amor transformador debe cambiar nuestra perspectiva sobre nosotros mismos y
   const today = new Date();
   today.setHours(6, 0, 0, 0); // 6:00 AM
 
-  const dailyDevotional = await prisma.dailyDevotional.create({
+  const dailyDevotional = await p.dailyDevotional.create({
     data: {
       userId: user.id,
       devotionalId: devotional.id,
@@ -114,7 +115,7 @@ Este amor transformador debe cambiar nuestra perspectiva sobre nosotros mismos y
   console.log('✅ Devocional diario programado para hoy');
 
   // Crear nota de ejemplo
-  const note = await prisma.note.create({
+  const note = await p.note.create({
     data: {
       userId: user.id,
       title: 'Sermón: El Buen Pastor',

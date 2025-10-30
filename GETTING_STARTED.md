@@ -47,7 +47,7 @@ npx prisma studio
 ## 📊 Estructura del Proyecto
 
 ```
-personapp/
+selapp/
 ├── prisma/
 │   └── schema.prisma          # Esquema de base de datos
 ├── public/

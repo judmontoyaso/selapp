@@ -2,8 +2,8 @@
   🎉 ¡PROYECTO CREADO EXITOSAMENTE! 🎉
 ==============================================
 
-Tu aplicación PWA de Devocionales y Notas 
-está lista para usar.
+Tu aplicación PWA "selapp" — Devocionales y Notas
+está lista para usar. Selapp ofrece una experiencia elegante, cálida y moderna para tus devocionales.
 
 ==============================================
   📖 LEE ESTO PRIMERO

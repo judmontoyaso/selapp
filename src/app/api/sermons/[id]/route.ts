@@ -1,14 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET: Obtener un sermón específico con todos sus mensajes
-export async function GET(request: Request, { params }: RouteParams) {
+// Use a loose type for the context parameter to avoid strict RouteContext typing issues
+export async function GET(request: Request, context: any) {
+  const { params } = context as { params: { id: string } };
   try {
     const sermon = await prisma.sermon.findUnique({
       where: {
@@ -44,7 +40,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 // PUT: Actualizar sermón
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: Request, context: any) {
+  const { params } = context as { params: { id: string } };
   try {
     const body = await request.json();
     const { title, pastor, date } = body;
@@ -71,7 +68,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // DELETE: Eliminar sermón
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, context: any) {
+  const { params } = context as { params: { id: string } };
   try {
     await prisma.sermon.delete({
       where: {

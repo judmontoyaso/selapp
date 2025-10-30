@@ -1,14 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // POST: Crear nuevo mensaje en un sermón
-export async function POST(request: Request, { params }: RouteParams) {
+// Use a loose type for the context parameter to avoid strict RouteContext typing issues
+export async function POST(request: Request, context: any) {
+  const { params } = context as { params: { id: string } };
   try {
     const body = await request.json();
     const { content, imageUrls } = body;

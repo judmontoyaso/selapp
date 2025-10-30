@@ -1,6 +1,7 @@
-# Devocionales y Notas - Aplicación PWA
+# selapp — Devocionales y Notas
 
-Una aplicación web progresiva (PWA) con Next.js para gestionar devocionales diarios y notas de predicación.
+Selapp es una aplicación web progresiva (PWA) pensada para acompañar tu disciplina espiritual y organizar notas de predicación.
+Con un diseño elegante, cálido y moderno, selapp facilita devocionales diarios, reflexión y la gestión de tus notas de sermón.
 
 ## 🌟 Características
 

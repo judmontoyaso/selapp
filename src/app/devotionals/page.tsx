@@ -116,8 +116,8 @@ export default function DevotionalsPage() {
           <div className="space-y-4 mb-6">
             {devotional.verses.map((v, index) => (
               <div key={index} className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg">
-                <p className="text-gray-800 dark:text-gray-200 italic mb-2">
-                  "{v.verse.text}"
+                <p className="text-gray-800 dark:text-gray-200 mb-2">
+                  <q className="italic">{v.verse.text}</q>
                 </p>
                 <p className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold">
                   {v.verse.reference}

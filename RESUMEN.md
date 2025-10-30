@@ -17,7 +17,7 @@ Has creado exitosamente una **aplicación web progresiva (PWA)** completa con Ne
 ## 📁 Estructura del Proyecto Creado
 
 ```
-personapp/
+selapp/
 │
 ├── 📄 INICIO.md                    ← LEE ESTO PRIMERO
 ├── 📄 README.md                    ← Documentación completa
