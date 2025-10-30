@@ -4,8 +4,8 @@
   "description": "Selapp: devocionales diarios y notas de predicación. Diseño elegante, cálido y moderno.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4F46E5",
+  "background_color": "#FAF5EB",
+  "theme_color": "#6B4E3D",
   "orientation": "portrait-primary",
   "icons": [
     {

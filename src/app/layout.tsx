@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   title: "selapp — Devocionales y Notas",
   description:
     "Selapp: devocionales diarios y notas de predicación con un diseño elegante, cálido y moderno.",
+  manifest: "/manifest.json",
+  themeColor: "#6B4E3D",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({
@@ -17,6 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        <link rel="icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <meta name="theme-color" content="#6B4E3D" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   );

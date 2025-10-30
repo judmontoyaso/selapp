@@ -3,25 +3,146 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #FAF5EB;
+  --foreground: #4A3429;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Estilos personalizados para Selapp */
+.selapp-card {
+  @apply bg-white rounded-2xl shadow-lg border border-selapp-beige-dark transition-all duration-300;
+}
+
+.selapp-card:hover {
+  @apply shadow-xl transform -translate-y-1;
+}
+
+.selapp-button {
+  @apply bg-selapp-brown hover:bg-selapp-brown-dark text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg;
+}
+
+.selapp-input {
+  @apply border-2 border-selapp-beige-dark rounded-xl px-4 py-3 focus:outline-none focus:border-selapp-brown focus:ring-2 focus:ring-selapp-brown/20 transition-all;
+}
+
+/* Estilos para contenido con formato (prose) */
+.prose-selapp {
+  line-height: 1.7;
+}
+
+.prose-selapp strong {
+  @apply font-bold text-selapp-brown-dark;
+}
+
+.prose-selapp em {
+  @apply italic;
+}
+
+.prose-selapp u {
+  text-decoration: underline;
+  text-decoration-color: theme('colors.selapp.brown');
+  text-underline-offset: 2px;
+}
+
+.prose-selapp h3 {
+  @apply text-lg font-bold mb-2 mt-4 text-selapp-brown-dark;
+}
+
+.prose-selapp blockquote {
+  @apply border-l-4 border-selapp-brown/30 pl-4 italic my-3 text-selapp-brown-light;
+}
+
+.prose-selapp li {
+  @apply ml-6 my-1;
+  list-style-type: disc;
+}
+
+.prose-selapp p {
+  @apply mb-2;
+}
+
+/* Estilos para mensajes de chat (fondo verde claro) */
+.prose-selapp-white strong {
+  @apply font-bold text-gray-800;
+}
+
+.prose-selapp-white em {
+  @apply italic text-gray-800;
+}
+
+.prose-selapp-white u {
+  text-decoration: underline;
+  text-decoration-color: theme('colors.gray.800');
+  text-underline-offset: 2px;
+}
+
+.prose-selapp-white h3 {
+  @apply text-lg font-bold mb-2 mt-2 text-gray-800;
+}
+
+.prose-selapp-white blockquote {
+  @apply border-l-4 border-gray-600 pl-4 italic my-2 text-gray-700;
+}
+
+.prose-selapp-white li {
+  @apply ml-6 my-1 text-gray-800;
+  list-style-type: disc;
+}
+
+/* Estilos para Tiptap Editor */
+.ProseMirror {
+  @apply focus:outline-none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: theme('colors.selapp.brown-light') / 50%;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror h3 {
+  @apply text-xl font-bold text-selapp-brown-dark mb-2 mt-4;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-selapp-brown/30 pl-4 italic my-3 text-selapp-brown-light bg-selapp-beige/20 py-2 rounded-r;
+}
+
+.ProseMirror ul {
+  @apply list-disc ml-6 my-2;
+}
+
+.ProseMirror li {
+  @apply my-1;
+}
+
+.ProseMirror strong {
+  @apply font-bold text-selapp-brown-dark;
+}
+
+.ProseMirror em {
+  @apply italic;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+  text-decoration-color: theme('colors.selapp.brown');
+  text-underline-offset: 2px;
+}
+
+.ProseMirror p {
+  @apply mb-2;
 }
