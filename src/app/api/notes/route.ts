@@ -2,6 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  // TODO: Modelo Note no existe en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelo Note no existe en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREE LA TABLA notes
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
   const category = searchParams.get("category");
@@ -32,9 +39,17 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function POST(request: Request) {
+  // TODO: Modelo Note no existe en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelo Note no existe en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREE LA TABLA notes
   try {
     const body = await request.json();
     const { userId, title, content, category, tags } = body;
@@ -64,4 +79,5 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  */
 }

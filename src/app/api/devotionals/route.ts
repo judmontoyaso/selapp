@@ -2,6 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  // TODO: Modelos Devotional/Verse no existen en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelos Devotional/Verse no existen en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS devotionals/verses
   const { searchParams } = new URL(request.url);
   const topic = searchParams.get("topic");
 
@@ -32,9 +39,17 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function POST(request: Request) {
+  // TODO: Modelos Devotional/Verse no existen en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelos Devotional/Verse no existen en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS devotionals/verses
   try {
     const body = await request.json();
     const { title, topic, content, questions, verseIds } = body;
@@ -69,4 +84,5 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  */
 }

@@ -12,6 +12,13 @@ if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 export async function POST(request: Request) {
+  // TODO: Modelo PushSubscription no existe en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelo PushSubscription no existe en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREE LA TABLA push_subscriptions
   try {
     const body = await request.json();
     const { userId, subscription } = body;
@@ -40,9 +47,17 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function DELETE(request: Request) {
+  // TODO: Modelo PushSubscription no existe en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelo PushSubscription no existe en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREE LA TABLA push_subscriptions
   try {
     const body = await request.json();
     const { endpoint } = body;
@@ -68,4 +83,5 @@ export async function DELETE(request: Request) {
       { status: 500 }
     );
   }
+  */
 }

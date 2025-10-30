@@ -2,6 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  // TODO: Modelos DailyDevotional/Devotional/Verse no existen en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelos DailyDevotional/Devotional/Verse no existen en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS daily_devotionals/devotionals/verses
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -40,9 +47,17 @@ export async function GET() {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function POST(request: Request) {
+  // TODO: Modelos DailyDevotional/Devotional/Verse no existen en la base de datos aún
+  return NextResponse.json(
+    { error: "Endpoint no implementado - Modelos DailyDevotional/Devotional/Verse no existen en BD" },
+    { status: 501 }
+  );
+  
+  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS daily_devotionals/devotionals/verses
   try {
     const body = await request.json();
     const { userId, answers } = body;
@@ -84,4 +99,5 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  */
 }
