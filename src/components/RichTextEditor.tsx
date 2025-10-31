@@ -132,7 +132,7 @@ export default function RichTextEditor({
           } disabled:opacity-50`}
           title="Cita"
         >
-          "
+          &quot;
         </button>
         <button
           type="button"
