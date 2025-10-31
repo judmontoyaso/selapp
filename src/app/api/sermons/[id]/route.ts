@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, safeQuery } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 // GET: Obtener un sermón específico con todos sus mensajes
@@ -6,21 +6,23 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request, context: any) {
   const { params } = context as { params: { id: string } };
   try {
-    const sermon = await prisma.sermons.findUnique({
-      where: {
-        id: params.id,
-      },
-      include: {
-        messages: {
-          orderBy: {
-            order: "asc",
-          },
-          include: {
-            images: true,
+    const sermon = await safeQuery(() =>
+      prisma.sermons.findUnique({
+        where: {
+          id: params.id,
+        },
+        include: {
+          messages: {
+            orderBy: {
+              order: "asc",
+            },
+            include: {
+              images: true,
+            },
           },
         },
-      },
-    });
+      })
+    );
 
     if (!sermon) {
       return NextResponse.json(
@@ -71,11 +73,13 @@ export async function PUT(request: Request, context: any) {
 export async function DELETE(request: Request, context: any) {
   const { params } = context as { params: { id: string } };
   try {
-    await prisma.sermons.delete({
-      where: {
-        id: params.id,
-      },
-    });
+    await safeQuery(() =>
+      prisma.sermons.delete({
+        where: {
+          id: params.id,
+        },
+      })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,19 +1,21 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, safeQuery } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 // GET: Obtener todos los sermones
 export async function GET() {
   try {
-    const sermons = await prisma.sermons.findMany({
-      orderBy: {
-        date: "desc",
-      },
-      include: {
-        _count: {
-          select: { messages: true },
+    const sermons = await safeQuery(() =>
+      prisma.sermons.findMany({
+        orderBy: {
+          date: "desc",
         },
-      },
-    });
+        include: {
+          _count: {
+            select: { messages: true },
+          },
+        },
+      })
+    );
 
     return NextResponse.json(sermons);
   } catch (error) {
@@ -38,13 +40,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const sermon = await prisma.sermons.create({
-      data: {
-        title,
-        pastor,
-        date: date ? new Date(date) : new Date(),
-      },
-    });
+    const sermon = await safeQuery(() =>
+      prisma.sermons.create({
+        data: {
+          title,
+          pastor,
+          date: date ? new Date(date) : new Date(),
+        },
+      })
+    );
 
     return NextResponse.json(sermon);
   } catch (error) {
