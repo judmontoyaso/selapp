@@ -19,6 +19,9 @@ body {
   }
 }
 
+/* Importar estilos completos para contenido bíblico */
+@import "scripture-styles/dist/css/scripture-styles.css";
+
 /* Estilos personalizados para Selapp */
 .selapp-card {
   @apply bg-white rounded-2xl shadow-lg border border-selapp-beige-dark transition-all duration-300;
@@ -146,3 +149,5 @@ body {
 .ProseMirror p {
   @apply mb-2;
 }
+
+/* Estilos para contenido de la Biblia - ahora usa scripture-styles completo */

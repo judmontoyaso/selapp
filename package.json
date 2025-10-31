@@ -24,6 +24,7 @@
     "next": "15.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "scripture-styles": "^1.6.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
