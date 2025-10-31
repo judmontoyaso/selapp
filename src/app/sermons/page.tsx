@@ -50,6 +50,28 @@ export default function SermonsPage() {
     }
   };
 
+  const handleDeleteSermon = async (sermonId: string, sermonTitle: string) => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar el sermón "${sermonTitle}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/sermons/${sermonId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Actualizar la lista de sermones
+        setSermons(sermons.filter(sermon => sermon.id !== sermonId));
+      } else {
+        alert("Error al eliminar el sermón");
+      }
+    } catch (error) {
+      console.error("Error deleting sermon:", error);
+      alert("Error al eliminar el sermón");
+    }
+  };
+
   const handleCreateSermon = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -127,33 +149,44 @@ export default function SermonsPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sermons.map((sermon) => (
-              <Link
-                key={sermon.id}
-                href={`/sermons/${sermon.id}`}
-                className="block"
-              >
-                <div className="selapp-card p-6 group h-full">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="text-3xl">📖</div>
-                    <span className="text-xs text-selapp-brown-light bg-selapp-beige px-3 py-1 rounded-full">
-                      {sermon._count.messages} mensajes
-                    </span>
+              <div key={sermon.id} className="block relative group">
+                <Link href={`/sermons/${sermon.id}`} className="block">
+                  <div className="selapp-card p-6 group h-full">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="text-3xl">📖</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-selapp-brown-light bg-selapp-beige px-3 py-1 rounded-full">
+                          {sermon._count.messages} mensajes
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteSermon(sermon.id, sermon.title);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Eliminar sermón"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-selapp-brown mb-2 group-hover:text-selapp-brown-dark transition-colors">
+                      {sermon.title}
+                    </h3>
+                    <p className="text-selapp-brown-light text-sm mb-2">
+                      Pastor: {sermon.pastor}
+                    </p>
+                    <p className="text-selapp-brown-light text-xs">
+                      {new Date(sermon.date).toLocaleDateString("es", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold text-selapp-brown mb-2 group-hover:text-selapp-brown-dark transition-colors">
-                    {sermon.title}
-                  </h3>
-                  <p className="text-selapp-brown-light text-sm mb-2">
-                    Pastor: {sermon.pastor}
-                  </p>
-                  <p className="text-selapp-brown-light text-xs">
-                    {new Date(sermon.date).toLocaleDateString("es", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         )}

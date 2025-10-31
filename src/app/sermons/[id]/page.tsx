@@ -346,24 +346,22 @@ export default function SermonChatPage() {
           </div>
           
           {/* Botón para cambiar entre vistas */}
-          {sermon.messages.length > 0 && (
-            <button
-              onClick={() => setViewMode(viewMode === "document" ? "chat" : "document")}
-              className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-            >
-              {viewMode === "document" ? (
-                <>
-                  <span>💬</span>
-                  <span className="hidden sm:inline">Vista Chat</span>
-                </>
-              ) : (
-                <>
-                  <span>📄</span>
-                  <span className="hidden sm:inline">Vista Documento</span>
-                </>
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => setViewMode(viewMode === "document" ? "chat" : "document")}
+            className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+          >
+            {viewMode === "document" ? (
+              <>
+                <span>💬</span>
+                <span className="hidden sm:inline">Vista Chat</span>
+              </>
+            ) : (
+              <>
+                <span>📄</span>
+                <span className="hidden sm:inline">Vista Documento</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
