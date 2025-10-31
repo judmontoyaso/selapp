@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request, context: any) {
   const { params } = context as { params: { id: string } };
   try {
-    const sermon = await prisma.sermon.findUnique({
+    const sermon = await prisma.sermons.findUnique({
       where: {
         id: params.id,
       },
@@ -46,7 +46,7 @@ export async function PUT(request: Request, context: any) {
     const body = await request.json();
     const { title, pastor, date } = body;
 
-    const sermon = await prisma.sermon.update({
+    const sermon = await prisma.sermons.update({
       where: {
         id: params.id,
       },
@@ -71,7 +71,7 @@ export async function PUT(request: Request, context: any) {
 export async function DELETE(request: Request, context: any) {
   const { params } = context as { params: { id: string } };
   try {
-    await prisma.sermon.delete({
+    await prisma.sermons.delete({
       where: {
         id: params.id,
       },

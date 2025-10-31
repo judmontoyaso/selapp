@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 export default function PushNotifications() {
-  useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      registerServiceWorker();
-    }
-  }, []);
-
-  async function registerServiceWorker() {
+  const registerServiceWorker = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.register("/sw.js");
       console.log("Service Worker registrado:", registration);
@@ -22,7 +16,13 @@ export default function PushNotifications() {
     } catch (error) {
       console.error("Error al registrar Service Worker:", error);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      registerServiceWorker();
+    }
+  }, [registerServiceWorker]);
 
   async function subscribeToPush(registration: ServiceWorkerRegistration) {
     try {

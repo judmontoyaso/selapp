@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 // GET: Obtener todos los sermones
 export async function GET() {
   try {
-    const sermons = await prisma.sermon.findMany({
+    const sermons = await prisma.sermons.findMany({
       orderBy: {
         date: "desc",
       },
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const sermon = await prisma.sermon.create({
+    const sermon = await prisma.sermons.create({
       data: {
         title,
         pastor,

@@ -19,7 +19,7 @@ export async function PUT(
       );
     }
 
-    const message = await prisma.message.update({
+    const message = await prisma.messages.update({
       where: {
         id: params.messageId,
       },
@@ -49,7 +49,7 @@ export async function DELETE(
   const { params } = context as { params: { id: string; messageId: string } };
   
   try {
-    await prisma.message.delete({
+    await prisma.messages.delete({
       where: {
         id: params.messageId,
       },

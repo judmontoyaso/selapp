@@ -17,14 +17,14 @@ export async function POST(request: Request, context: any) {
     }
 
     // Obtener el número de mensajes actuales para calcular el orden
-    const messageCount = await prisma.message.count({
+    const messageCount = await prisma.messages.count({
       where: {
         sermonId: params.id,
       },
     });
 
     // Crear el mensaje con sus imágenes
-    const message = await prisma.message.create({
+    const message = await prisma.messages.create({
       data: {
         sermonId: params.id,
         content,

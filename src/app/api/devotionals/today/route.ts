@@ -2,44 +2,42 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  // TODO: Modelos DailyDevotional/Devotional/Verse no existen en la base de datos aún
-  return NextResponse.json(
-    { error: "Endpoint no implementado - Modelos DailyDevotional/Devotional/Verse no existen en BD" },
-    { status: 501 }
-  );
-  
-  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS daily_devotionals/devotionals/verses
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Por ahora devolvemos un devocional de ejemplo
+    // TODO: Crear tabla devocionales y sistema completo
+    
+    const devotional = {
+      id: "1",
+      title: "Fe que Transforma",
+      topic: "Fe",
+      content: `La fe es el fundamento de nuestra relación con Dios. No se trata simplemente de creer que Dios existe, sino de confiar plenamente en Él y en Sus promesas.
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+Cuando enfrentamos desafíos en nuestra vida, es nuestra fe la que nos sostiene. La fe nos permite ver más allá de las circunstancias presentes y confiar en que Dios está obrando para nuestro bien.
 
-    const dailyDevotional = await prisma.dailyDevotional.findFirst({
-      where: {
-        scheduledFor: {
-          gte: today,
-          lt: tomorrow,
+Hoy, reflexionemos sobre cómo nuestra fe se refleja en nuestras acciones diarias. ¿Estamos viviendo de acuerdo a lo que decimos creer?`,
+      questions: [
+        "¿Cómo has visto a Dios actuar en tu vida recientemente?",
+        "¿Qué área de tu vida necesitas entregar completamente a Dios?",
+        "¿De qué manera puedes fortalecer tu fe esta semana?"
+      ],
+      verses: [
+        {
+          verse: {
+            reference: "Hebreos 11:1",
+            text: "Es, pues, la fe la certeza de lo que se espera, la convicción de lo que no se ve."
+          }
         },
-      },
-      include: {
-        devotional: {
-          include: {
-            verses: {
-              include: {
-                verse: true,
-              },
-              orderBy: {
-                order: "asc",
-              },
-            },
-          },
-        },
-      },
-    });
+        {
+          verse: {
+            reference: "Romanos 10:17",
+            text: "Así que la fe es por el oír, y el oír, por la palabra de Dios."
+          }
+        }
+      ],
+      completedAt: null
+    };
 
-    return NextResponse.json(dailyDevotional);
+    return NextResponse.json({ devotional, answers: [] });
   } catch (error) {
     console.error("Error fetching today's devotional:", error);
     return NextResponse.json(
@@ -47,51 +45,21 @@ export async function GET() {
       { status: 500 }
     );
   }
-  */
 }
 
 export async function POST(request: Request) {
-  // TODO: Modelos DailyDevotional/Devotional/Verse no existen en la base de datos aún
-  return NextResponse.json(
-    { error: "Endpoint no implementado - Modelos DailyDevotional/Devotional/Verse no existen en BD" },
-    { status: 501 }
-  );
-  
-  /* DESCOMENTADO CUANDO SE CREEN LAS TABLAS daily_devotionals/devotionals/verses
   try {
     const body = await request.json();
     const { userId, answers } = body;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Por ahora solo logueamos
+    console.log("Devocional completado por usuario:", userId);
+    console.log("Respuestas:", answers);
 
-    const dailyDevotional = await prisma.dailyDevotional.findFirst({
-      where: {
-        userId,
-        scheduledFor: {
-          gte: today,
-        },
-      },
+    return NextResponse.json({ 
+      success: true,
+      message: "Devocional completado exitosamente" 
     });
-
-    if (!dailyDevotional) {
-      return NextResponse.json(
-        { error: "No se encontró el devocional de hoy" },
-        { status: 404 }
-      );
-    }
-
-    const updated = await prisma.dailyDevotional.update({
-      where: {
-        id: dailyDevotional.id,
-      },
-      data: {
-        answers,
-        completedAt: new Date(),
-      },
-    });
-
-    return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating devotional:", error);
     return NextResponse.json(
@@ -99,5 +67,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-  */
 }
