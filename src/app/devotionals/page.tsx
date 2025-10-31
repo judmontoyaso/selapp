@@ -180,7 +180,7 @@ export default function DevotionalsPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Ingresa referencias como "Juan 3:16", "Génesis 1:1", etc.
+              Ingresa referencias como &quot;Juan 3:16&quot;, &quot;Génesis 1:1&quot;, etc.
             </p>
           </div>
 
