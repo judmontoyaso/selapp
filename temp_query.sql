@@ -1,0 +1,1 @@
+SELECT DISTINCT libro FROM bible_verses ORDER BY libro LIMIT 20;

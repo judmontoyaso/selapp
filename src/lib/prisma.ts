@@ -7,38 +7,25 @@ const globalForPrisma = globalThis as unknown as {
 // Configurar la URL de la base de datos para entornos serverless
 const databaseUrl = process.env.DATABASE_URL
 const isServerless = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME
-const isDevelopment = process.env.NODE_ENV === 'development'
 
-// En entornos serverless o desarrollo, agregar parámetros para evitar problemas con prepared statements
-const connectionUrl = (isServerless || isDevelopment) && databaseUrl
+// En entornos serverless, agregar parámetros para evitar problemas con prepared statements
+const connectionUrl = isServerless && databaseUrl
   ? `${databaseUrl}?pgbouncer=true&connect_timeout=15&prepared_statements=false`
   : databaseUrl
 
-// En desarrollo, no reutilizar la instancia global para evitar problemas con prepared statements
-const shouldReuseClient = !isDevelopment
-
-export const prisma = shouldReuseClient
-  ? (globalForPrisma.prisma ?? new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-      datasources: {
-        db: {
-          url: connectionUrl,
-        },
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    datasources: {
+      db: {
+        url: connectionUrl,
       },
-    }))
-  : new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-      datasources: {
-        db: {
-          url: connectionUrl,
-        },
-      },
-    })
+    },
+  })
 
-// Solo reutilizar en producción/serverless
-if (shouldReuseClient) {
-  globalForPrisma.prisma = prisma
-}
+// En TODAS las env (incluyendo producción), reutiliza la instancia
+globalForPrisma.prisma = prisma
 
 // Función helper para manejar errores de prepared statements
 export async function safeQuery<T>(query: () => Promise<T>): Promise<T> {

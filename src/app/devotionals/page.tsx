@@ -48,6 +48,8 @@ export default function DevotionalsPage() {
   const [loadingVerse, setLoadingVerse] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState('simple');
   const [currentVerseInfo, setCurrentVerseInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   const fetchRandomFavoriteVerse = async (version?: string) => {
     const versionToUse = version || selectedVersion;
@@ -82,6 +84,31 @@ export default function DevotionalsPage() {
     }
   };
 
+  const searchVerse = async () => {
+    if (!searchQuery.trim()) {
+      alert("Por favor ingresa una referencia bíblica (ej: Juan 3:16)");
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const response = await fetch(`/api/devotionals/search?q=${encodeURIComponent(searchQuery)}&version=${selectedVersion}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setFavoriteVerse(data);
+        setCurrentVerseInfo(null); // Limpiar info del versículo actual ya que es una búsqueda nueva
+      } else {
+        alert(data.error || "Error al buscar versículo");
+      }
+    } catch (error) {
+      console.error("Error searching verse:", error);
+      alert("Error al buscar versículo");
+    } finally {
+      setSearching(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="container mx-auto max-w-4xl">
@@ -92,10 +119,10 @@ export default function DevotionalsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 text-selapp-brown dark:text-selapp-beige">
-              Versículo del Día
+              Devocionales y Versículos
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Obtén un versículo aleatorio de la Biblia
+              Busca versículos específicos o obtén uno aleatorio de la Biblia
             </p>
 
             <div className="max-w-md mx-auto mb-6">
@@ -124,6 +151,47 @@ export default function DevotionalsPage() {
             </div>
           </div>
 
+          {/* Campo de búsqueda */}
+          <div className="max-w-md mx-auto mb-6">
+            <label htmlFor="verse-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Buscar Versículo
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="verse-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Ej: Juan 3:16"
+                className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-selapp-brown focus:border-transparent transition-colors"
+                onKeyPress={(e) => e.key === 'Enter' && searchVerse()}
+              />
+              <button
+                onClick={searchVerse}
+                disabled={searching}
+                className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {searching ? (
+                  <span className="animate-spin">⏳</span>
+                ) : (
+                  <span>🔍</span>
+                )}
+                Buscar
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Ingresa referencias como "Juan 3:16", "Génesis 1:1", etc.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
+              <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">O</span>
+              <div className="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
+            </div>
+          </div>
+
           <button
             onClick={() => fetchRandomFavoriteVerse()}
             disabled={loadingVerse}
@@ -136,8 +204,8 @@ export default function DevotionalsPage() {
               </>
             ) : (
               <>
-                <span className="text-2xl">📖</span>
-                Obtener Versículo Aleatorio
+                <span className="text-2xl">🔄</span>
+                Versículo Aleatorio
               </>
             )}
           </button>
