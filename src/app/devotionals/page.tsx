@@ -156,7 +156,7 @@ export default function DevotionalsPage() {
             <label htmlFor="verse-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Buscar Versículo
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 id="verse-search"
                 type="text"
@@ -169,14 +169,15 @@ export default function DevotionalsPage() {
               <button
                 onClick={searchVerse}
                 disabled={searching}
-                className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 sm:w-auto w-full"
               >
                 {searching ? (
                   <span className="animate-spin">⏳</span>
                 ) : (
                   <span>🔍</span>
                 )}
-                Buscar
+                <span className="hidden sm:inline">Buscar</span>
+                <span className="sm:hidden">Buscar Versículo</span>
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
