@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma, safeQuery } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
     // Obtener un versículo aleatorio de favorites_verses
-    const favorites = await safeQuery(() =>
-      prisma.favorites_verses.findMany()
-    ) as any[];
+    const favorites = await prisma.favorites_verses.findMany() as any[];
     
     if (favorites.length === 0) {
       return NextResponse.json({ error: 'No hay versículos favoritos' }, { status: 404 });
@@ -16,11 +14,9 @@ export async function GET() {
     const randomFavorite = favorites[Math.floor(Math.random() * favorites.length)];
 
     // Consultar el libro para obtener el nombre
-    const book = await safeQuery(() =>
-      prisma.books.findUnique({
-        where: { booknum: randomFavorite.booknum }
-      })
-    ) as any;
+    const book = await prisma.books.findUnique({
+      where: { booknum: randomFavorite.booknum }
+    }) as any;
 
     if (!book) {
       return NextResponse.json({ error: 'Libro no encontrado' }, { status: 404 });
