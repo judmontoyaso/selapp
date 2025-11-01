@@ -41,7 +41,11 @@ model sermons {
   date      DateTime   @default(now())
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  messages[]
+
+  @@index([userId])
 }
 
 // Tablas de la Biblia
@@ -80,4 +84,52 @@ model favorites_verses {
   end_verse   Int
   text        String
   created_at  DateTime? @default(now()) @db.Timestamp(6)
+}
+
+// NextAuth.js Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  sermons       sermons[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

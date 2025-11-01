@@ -1,20 +1,27 @@
 import Link from "next/link";
 import Image from "next/image";
+import AuthButtons from "@/components/AuthButtons";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white">
-      {/* Header con logo */}
+      {/* Header con logo y auth buttons */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center mb-8">
-          <Image
-            src="/selapp.png"
-            alt="Selapp Logo"
-            width={300}
-            height={120}
-            priority
-            className="object-contain"
-          />
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex-1"></div>
+          <div className="flex-1 flex justify-center">
+            <Image
+              src="/selapp.png"
+              alt="Selapp Logo"
+              width={300}
+              height={120}
+              priority
+              className="object-contain"
+            />
+          </div>
+          <div className="flex-1 flex justify-end">
+            <AuthButtons />
+          </div>
         </div>
 
         <div className="max-w-4xl mx-auto">

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, safeQuery } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // Mapeo de versiones de la Biblia disponibles
 const bibleVersions: { [key: string]: { id: string; name: string } } = {
@@ -39,15 +39,13 @@ export async function GET(request: Request) {
     // Si se especifican parámetros específicos de versículo, usar esos
     if (bookCodeParam && chapterParam && verseParam) {
       // Buscar el versículo específico en la base de datos
-      randomVerse = await safeQuery(() =>
-        prisma.bible_verses.findFirst({
-          where: {
-            libro: bookCodeParam, // Usar el nombre del libro en lugar del código
-            capitulo: parseInt(chapterParam),
-            versiculo: verseParam
-          }
-        })
-      );
+      randomVerse = await prisma.bible_verses.findFirst({
+        where: {
+          libro: bookCodeParam, // Usar el nombre del libro en lugar del código
+          capitulo: parseInt(chapterParam),
+          versiculo: verseParam
+        }
+      });
 
       if (!randomVerse) {
         return NextResponse.json({
@@ -56,9 +54,7 @@ export async function GET(request: Request) {
       }
     } else {
       // Obtener un versículo aleatorio de bible_verses
-      const bibleVerses = await safeQuery(() =>
-        prisma.bible_verses.findMany()
-      ) as any[];
+      const bibleVerses = await prisma.bible_verses.findMany() as any[];
 
       if (bibleVerses.length === 0) {
         return NextResponse.json({ error: 'No hay versículos disponibles' }, { status: 404 });

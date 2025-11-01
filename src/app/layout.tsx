@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import SessionProvider from "@/components/SessionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,7 +29,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="theme-color" content="#6B4E3D" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
