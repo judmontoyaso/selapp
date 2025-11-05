@@ -1,89 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface Verse {
+interface VerseOfDay {
   reference: string;
   text: string;
-}
-
-interface DevotionalData {
-  id: string;
-  title: string;
-  topic: string;
-  content: string;
-  questions: string[];
-  verses: Array<{
-    verse: Verse;
-  }>;
-  completedAt?: string;
-}
-
-interface FavoriteVerse {
-  reference: string;
-  text: string;
-  chapter: number;
-  verses: string;
   book: string;
+  chapter: number;
+  verse: string;
+  version: string;
   tema?: string;
-  translation?: string;
-  version?: string;
-  source: 'api' | 'database';
-  note?: string;
+  date: string;
+  source: 'database' | 'api-generated';
 }
-
-const bibleVersions = [
-  { code: 'simple', name: 'Biblia en Español Simple' },
-  { code: 'rvr1909', name: 'Reina Valera 1909' },
-  { code: 'pdpt', name: 'Palabra de Dios para Ti' },
-  { code: 'pdpt-nt', name: 'Palabra de Dios para Ti (NT)' },
-  { code: 'fbv-nt', name: 'Biblia Libre (NT)' },
-  { code: 'vbl', name: 'Versión Biblia Libre' },
-  { code: 'nbv', name: 'Nueva Biblia Viva 2008 (No disponible)' }
-];
 
 export default function DevotionalsPage() {
-  const [favoriteVerse, setFavoriteVerse] = useState<FavoriteVerse | null>(null);
-  const [loadingVerse, setLoadingVerse] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState('simple');
-  const [currentVerseInfo, setCurrentVerseInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [verseOfDay, setVerseOfDay] = useState<VerseOfDay | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchRandomFavoriteVerse = async (version?: string) => {
-    const versionToUse = version || selectedVersion;
-    setLoadingVerse(true);
+  useEffect(() => {
+    fetchVerseOfDay();
+  }, []);
+
+  const fetchVerseOfDay = async () => {
+    setLoading(true);
     try {
-      let url = `/api/devotionals/random?version=${versionToUse}`;
-      
-      // Si hay información de versículo actual y se está cambiando versión, usar el mismo versículo
-      if (version && currentVerseInfo) {
-        url += `&book=${encodeURIComponent(currentVerseInfo.book)}&chapter=${currentVerseInfo.chapter}&verse=${currentVerseInfo.verse}`;
-      }
-      
-      const response = await fetch(url);
+      const response = await fetch('/api/verse-of-day');
       const data = await response.json();
       
       if (response.ok) {
-        setFavoriteVerse(data);
-        // Guardar información del versículo para cambios futuros de versión
-        setCurrentVerseInfo({
-          book: data.book,
-          chapter: data.chapter,
-          verse: data.verses
-        });
+        setVerseOfDay(data);
       } else {
-        alert(data.error || "Error al obtener versículo");
+        console.error('Error fetching verse of day:', data.error);
+        alert('Error al cargar el versículo del día. Por favor, recarga la página.');
       }
     } catch (error) {
-      console.error("Error fetching favorite verse:", error);
-      alert("Error al obtener versículo favorito");
+      console.error('Error fetching verse of day:', error);
+      alert('Error al cargar el versículo del día. Por favor, recarga la página.');
     } finally {
-      setLoadingVerse(false);
+      setLoading(false);
     }
   };
-
-  // NOTE: La búsqueda de versículos fue movida a /verse-search. Aquí solo queda
-  // la funcionalidad para obtener un versículo aleatorio y cambiar la versión.
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white dark:from-gray-900 dark:to-gray-800 p-4">
@@ -95,104 +53,80 @@ export default function DevotionalsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 text-selapp-brown dark:text-selapp-beige">
-              Devocionales y Versículos
+              📖 Versículo del Día
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Busca versículos específicos o obtén uno aleatorio de la Biblia
+              Un versículo especial para meditar hoy
             </p>
-
-            <div className="max-w-md mx-auto mb-6">
-              <label htmlFor="bible-version" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Versión de la Biblia
-              </label>
-              <select
-                id="bible-version"
-                value={selectedVersion}
-                onChange={(e) => {
-                  const newVersion = e.target.value;
-                  setSelectedVersion(newVersion);
-                  // Si ya hay un versículo generado, cambiar su versión
-                  if (favoriteVerse && currentVerseInfo) {
-                    fetchRandomFavoriteVerse(newVersion);
-                  }
-                }}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-selapp-brown focus:border-transparent transition-colors"
-              >
-                {bibleVersions.map((version) => (
-                  <option key={version.code} value={version.code}>
-                    {version.name}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          <button
-            onClick={() => fetchRandomFavoriteVerse()}
-            disabled={loadingVerse}
-            className="w-full bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-3 mb-6 text-lg"
-          >
-            {loadingVerse ? (
-              <>
-                <span className="animate-spin text-2xl">⏳</span>
-                Cargando...
-              </>
-            ) : (
-              <>
-                <span className="text-2xl">🔄</span>
-                Versículo Aleatorio
-              </>
-            )}
-          </button>
-
-          {favoriteVerse && (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <span className="text-2xl animate-spin">⏳</span>
+              <span className="ml-3 text-selapp-brown dark:text-selapp-beige">Cargando versículo del día...</span>
+            </div>
+          ) : verseOfDay ? (
             <div className="bg-selapp-beige dark:bg-selapp-brown/20 p-8 rounded-xl border-l-4 border-selapp-brown shadow-md">
+              <div className="text-center mb-4">
+                <p className="text-sm text-selapp-brown-light dark:text-selapp-beige/70">
+                  {new Date(verseOfDay.date).toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              </div>
+
               <div 
                 className="text-gray-800 dark:text-gray-200 text-2xl mb-6 leading-relaxed text-center font-serif italic scripture-styles"
-                dangerouslySetInnerHTML={{ __html: favoriteVerse.text }}
+                dangerouslySetInnerHTML={{ __html: verseOfDay.text }}
               />
-              {favoriteVerse.note && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center italic">
-                  {favoriteVerse.note}
-                </p>
-              )}
+
               <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-selapp-brown/20">
                 <div>
                   <p className="text-selapp-brown dark:text-selapp-beige font-bold text-lg mb-1">
-                    {favoriteVerse.reference}
+                    {verseOfDay.reference}
                   </p>
-                  {favoriteVerse.tema && (
+                  {verseOfDay.tema && (
                     <p className="text-sm text-selapp-brown/70 dark:text-selapp-beige/70">
-                      Tema: {favoriteVerse.tema}
+                      Tema: {verseOfDay.tema}
                     </p>
                   )}
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                  {favoriteVerse.source === 'api' ? (
+                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                  {verseOfDay.source === 'api-generated' ? (
                     <>
-                      <span>🌐</span>
-                      <span>API Bible</span>
+                      <span>✨</span>
+                      <span>Generado hoy</span>
                     </>
                   ) : (
                     <>
                       <span>💾</span>
-                      <span>Base de datos</span>
+                      <span>Versículo del día</span>
                     </>
                   )}
-                  {favoriteVerse.translation && ` • ${favoriteVerse.translation}`}
-                </span>
+                </div>
               </div>
             </div>
-          )}
-
-          {!favoriteVerse && !loadingVerse && (
+          ) : (
             <div className="text-center text-gray-500 dark:text-gray-400 py-12">
               <span className="text-6xl mb-4 block">📖</span>
               <p className="text-lg">
-                Haz clic en el botón para obtener un versículo de la Biblia
+                No se pudo cargar el versículo del día. Por favor, intenta recargar la página.
               </p>
             </div>
           )}
+
+          {/* Botón para buscar más versículos */}
+          <div className="mt-8 text-center">
+            <Link 
+              href="/verse-search"
+              className="inline-block bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              🔍 Buscar otros versículos
+            </Link>
+          </div>
         </div>
       </div>
     </div>
