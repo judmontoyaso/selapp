@@ -29,5 +29,6 @@ export const config = {
     '/api/devotionals/:path*',
     '/api/notes/:path*',
     '/api/upload/:path*',
+    '/api/readings/:path*',
   ],
 };
