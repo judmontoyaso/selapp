@@ -125,6 +125,7 @@ model User {
   sessions      Session[]
   sermons       sermons[]
   dailyReadings DailyReading[]
+  diaryEntries  DiaryEntry[]
 }
 
 model VerificationToken {
@@ -164,5 +165,26 @@ model VerseOfTheDay {
   tema        String?  // Tema opcional
   createdAt   DateTime @default(now())
   
+  @@index([date])
+}
+
+// Diario Personal - Entradas diarias del usuario
+model DiaryEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime @default(now()) @db.Date // Fecha de la entrada
+  gratitude       String?  @db.Text // 🕊 Agradece por algo
+  thoughts        String?  @db.Text // 💭 ¿Qué estás pensando?
+  mood            String?  // 😊 ¿Cómo te sientes hoy? (emoji o texto)
+  moodScore       Int?     // Escala 1-5 opcional
+  achievements    String?  @db.Text // ✅ ¿Qué lograste o aprendiste hoy?
+  freeNote        String?  @db.Text // 🌙 Nota libre (opcional)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
   @@index([date])
 }
