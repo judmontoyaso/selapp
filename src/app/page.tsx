@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import AuthButtons from "@/components/AuthButtons";
 import DailyReadingTracker from "@/components/DailyReadingTracker";
+import VerseOfTheDay from "@/components/VerseOfTheDay";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -67,7 +68,7 @@ export default function Home() {
           </div>
 
           {/* Features Grid */}
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 mb-16">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8 mb-16">
             {/* Feature 1 */}
             <div className="selapp-card p-8 text-center">
               <div className="text-6xl mb-4">📖</div>
@@ -101,6 +102,17 @@ export default function Home() {
               <p className="text-selapp-brown-light">
                 Recibe devocionales diarios con versículos bíblicos y preguntas 
                 de reflexión. Notificaciones push para no perderte ninguno.
+              </p>
+            </div>
+
+            {/* Feature 4 - Buscar Versículos */}
+            <div className="selapp-card p-8 text-center">
+              <div className="text-6xl mb-4">🔎</div>
+              <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
+                Buscar Versículos
+              </h3>
+              <p className="text-selapp-brown-light">
+                Busca referencias bíblicas rápidas y abre el versículo en la vista completa.
               </p>
             </div>
           </div>
@@ -185,6 +197,9 @@ export default function Home() {
         </div>
 
         <div className="max-w-4xl mx-auto space-y-8">
+          {/* Versículo del Día */}
+          <VerseOfTheDay />
+
           {/* Componente de seguimiento de lectura diaria */}
           <DailyReadingTracker />
 
@@ -195,7 +210,7 @@ export default function Home() {
             ¿Qué deseas hacer hoy?
           </p>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
             {/* Card de Sermones */}
             <Link href="/sermons" className="block">
               <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
@@ -223,7 +238,6 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-
             {/* Card de Devocionales */}
             <Link href="/devotionals" className="block">
               <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
@@ -249,6 +263,19 @@ export default function Home() {
                     <span>Notificaciones push</span>
                   </div>
                 </div>
+              </div>
+            </Link>
+
+            {/* Card de Buscar Versículos */}
+            <Link href="/verse-search" className="block">
+              <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
+                <div className="text-6xl mb-4 text-center">🔎</div>
+                <h2 className="text-2xl font-bold mb-3 text-selapp-brown text-center group-hover:text-selapp-brown-dark transition-colors">
+                  Buscar Versículos
+                </h2>
+                <p className="text-selapp-brown-light text-center mb-4">
+                  Busca referencias bíblicas y abre el versículo completo.
+                </p>
               </div>
             </Link>
           </div>
