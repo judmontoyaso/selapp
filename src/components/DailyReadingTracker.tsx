@@ -106,7 +106,7 @@ export default function DailyReadingTracker() {
 
       {/* Descripción del nivel */}
       <div className="bg-white rounded-lg p-3 mb-4 border-l-4 border-green-500">
-        <p className="text-sm text-gray-700 italic">"{stats.currentLevel.description}"</p>
+        <p className="text-sm text-gray-700 italic">&ldquo;{stats.currentLevel.description}&rdquo;</p>
       </div>
 
       {/* Estadísticas principales */}
