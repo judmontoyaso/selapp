@@ -42,10 +42,10 @@ export default function VerseOfTheDay() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-selapp-beige to-selapp-cream rounded-2xl shadow-xl p-8 mb-8 border-l-4 border-selapp-accent">
+      <div className="bg-white rounded-2xl shadow-sm p-8 border border-selapp-brown/10">
         <div className="flex items-center justify-center">
           <span className="text-2xl animate-spin">⏳</span>
-          <span className="ml-3 text-selapp-brown">Cargando versículo del día...</span>
+          <span className="ml-3 text-selapp-brown-light">Cargando versículo del día...</span>
         </div>
       </div>
     );
@@ -56,51 +56,42 @@ export default function VerseOfTheDay() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-selapp-beige to-selapp-cream rounded-2xl shadow-xl p-8 mb-8 border-l-4 border-selapp-accent">
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-selapp-brown flex items-center justify-center gap-2">
+    <div className="bg-white rounded-2xl shadow-sm p-8 md:p-10 border border-selapp-brown/10 hover:shadow-md transition-shadow">
+      {/* Header minimalista */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-selapp-brown/10">
+        <div className="flex items-center gap-3">
           <span className="text-3xl">📖</span>
-          Versículo del Día
-        </h2>
-        <p className="text-sm text-selapp-brown-light mt-1">
-          {new Date(verse.date).toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </p>
+          <div>
+            <h2 className="text-xl font-semibold text-selapp-brown">
+              Versículo del Día
+            </h2>
+            <p className="text-xs text-selapp-brown-light/70">
+              {new Date(verse.date).toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                day: 'numeric',
+                month: 'long'
+              })}
+            </p>
+          </div>
+        </div>
+        {verse.tema && (
+          <span className="text-xs px-3 py-1 bg-selapp-accent/10 text-selapp-accent rounded-full font-medium">
+            {verse.tema}
+          </span>
+        )}
       </div>
 
+      {/* Texto del versículo - más espacioso y legible */}
       <div 
-        className="text-gray-800 text-xl md:text-2xl mb-6 leading-relaxed text-center font-serif italic scripture-styles"
+        className="text-gray-800 text-xl md:text-2xl mb-6 leading-relaxed text-center font-serif scripture-styles px-4"
         dangerouslySetInnerHTML={{ __html: verse.text }}
       />
 
-      <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-selapp-brown/20">
-        <div>
-          <p className="text-selapp-brown font-bold text-lg">
-            {verse.reference}
-          </p>
-          {verse.tema && (
-            <p className="text-sm text-selapp-brown-light">
-              Tema: {verse.tema}
-            </p>
-          )}
-        </div>
-        <div className="text-sm text-gray-600 flex items-center gap-2">
-          {verse.source === 'api-generated' ? (
-            <>
-              <span>✨</span>
-              <span>Generado hoy</span>
-            </>
-          ) : (
-            <>
-              <span>💾</span>
-              <span>Versículo del día</span>
-            </>
-          )}
-        </div>
+      {/* Footer minimalista */}
+      <div className="flex items-center justify-center pt-4 border-t border-selapp-brown/10">
+        <p className="text-selapp-brown font-semibold text-base">
+          {verse.reference}
+        </p>
       </div>
     </div>
   );

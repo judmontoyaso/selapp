@@ -177,105 +177,126 @@ export default function Home() {
   // Dashboard para usuarios autenticados
   return (
     <main className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white">
-      {/* Header con logo y auth buttons */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex-1"></div>
+      {/* Header minimalista */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center max-w-6xl mx-auto">
+          <div className="flex-1 pl-16 lg:pl-0"></div>
           <div className="flex-1 flex justify-center">
             <Image
               src="/selapp.png"
               alt="Selapp Logo"
-              width={300}
-              height={120}
+              width={240}
+              height={96}
               priority
-              className="object-contain"
+              className="object-contain opacity-90"
             />
           </div>
           <div className="flex-1 flex justify-end">
             <AuthButtons />
           </div>
         </div>
+      </div>
 
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Versículo del Día */}
-          <VerseOfTheDay />
-
-          {/* Componente de seguimiento de lectura diaria */}
-          <DailyReadingTracker />
-
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-selapp-brown">
-            Bienvenido, {session.user?.email?.split('@')[0]}
+      {/* Contenedor principal */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        
+        {/* Saludo personalizado - más sutil */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-light text-selapp-brown mb-2">
+            Bienvenido, <span className="font-semibold">
+              {session.user?.name || session.user?.email?.split('@')[0] || "Usuario"}
+            </span>
           </h1>
-          <p className="text-center text-selapp-brown-light text-lg mb-12 max-w-2xl mx-auto">
-            ¿Qué deseas hacer hoy?
+          <p className="text-selapp-brown-light/80 text-base">
+            Continúa tu caminar espiritual
           </p>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {/* Card de Sermones */}
+        {/* Grid principal - 2 columnas en desktop */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          
+          {/* Columna izquierda - Versículo del Día (más destacado) */}
+          <div className="lg:col-span-2 space-y-8">
+            <VerseOfTheDay />
+            
+            {/* Tracker de lectura diaria */}
+            <DailyReadingTracker />
+          </div>
+
+          {/* Columna derecha - Acciones rápidas */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-selapp-brown mb-4 text-center lg:text-left">
+              Acciones Rápidas
+            </h2>
+            
+            {/* Card de Sermones - Compacto */}
             <Link href="/sermons" className="block">
-              <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
-                <div className="text-6xl mb-4 text-center">📖</div>
-                <h2 className="text-2xl font-bold mb-3 text-selapp-brown text-center group-hover:text-selapp-brown-dark transition-colors">
-                  Sermones
-                </h2>
-                <p className="text-selapp-brown-light text-center mb-4">
-                  Organiza tus notas de predicación de forma visual y práctica
-                </p>
-                
-                <div className="space-y-2 mt-4">
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Interfaz tipo chat</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Adjunta imágenes</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Todo en la nube</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            {/* Card de Devocionales */}
-            <Link href="/devotionals" className="block">
-              <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
-                <div className="text-6xl mb-4 text-center">🙏</div>
-                <h2 className="text-2xl font-bold mb-3 text-selapp-brown text-center group-hover:text-selapp-brown-dark transition-colors">
-                  Devocionales
-                </h2>
-                <p className="text-selapp-brown-light text-center mb-4">
-                  Devocionales diarios con versículos y reflexiones
-                </p>
-                
-                <div className="space-y-2 mt-4">
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Versículos diarios</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Preguntas de reflexión</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-selapp-brown-light">
-                    <span className="text-selapp-accent text-lg">✓</span>
-                    <span>Notificaciones push</span>
+              <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl flex-shrink-0">📖</div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
+                      Sermones
+                    </h3>
+                    <p className="text-sm text-selapp-brown-light/80 mb-3">
+                      Notas de predicación
+                    </p>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
+                        <span className="text-selapp-accent">•</span>
+                        <span>Interfaz tipo chat</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
+                        <span className="text-selapp-accent">•</span>
+                        <span>Con imágenes</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </Link>
 
-            {/* Card de Buscar Versículos */}
+            {/* Card de Devocionales - Compacto */}
+            <Link href="/devotionals" className="block">
+              <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl flex-shrink-0">🙏</div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
+                      Devocionales
+                    </h3>
+                    <p className="text-sm text-selapp-brown-light/80 mb-3">
+                      Reflexiones diarias
+                    </p>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
+                        <span className="text-selapp-accent">•</span>
+                        <span>Versículos diarios</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
+                        <span className="text-selapp-accent">•</span>
+                        <span>Preguntas guiadas</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Card de Buscar Versículos - Compacto */}
             <Link href="/verse-search" className="block">
-              <div className="selapp-card p-8 group hover:shadow-xl transition-shadow">
-                <div className="text-6xl mb-4 text-center">🔎</div>
-                <h2 className="text-2xl font-bold mb-3 text-selapp-brown text-center group-hover:text-selapp-brown-dark transition-colors">
-                  Buscar Versículos
-                </h2>
-                <p className="text-selapp-brown-light text-center mb-4">
-                  Busca referencias bíblicas y abre el versículo completo.
-                </p>
+              <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl flex-shrink-0">🔎</div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
+                      Buscar Versículos
+                    </h3>
+                    <p className="text-sm text-selapp-brown-light/80">
+                      Referencias bíblicas y versículos aleatorios
+                    </p>
+                  </div>
+                </div>
               </div>
             </Link>
           </div>
