@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import AuthButtons from "@/components/AuthButtons";
+import DailyReadingTracker from "@/components/DailyReadingTracker";
 
 export default function Home() {
   return (
@@ -24,7 +27,10 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Componente de seguimiento de lectura diaria */}
+          <DailyReadingTracker />
+
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-selapp-brown">
             Devocionales y Notas de Predicación
           </h1>

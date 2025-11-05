@@ -115,15 +115,16 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String         @unique
   emailVerified DateTime?
   image         String?
   password      String?
   accounts      Account[]
   sessions      Session[]
   sermons       sermons[]
+  dailyReadings DailyReading[]
 }
 
 model VerificationToken {
@@ -132,4 +133,20 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Daily Bible Reading Tracking
+model DailyReading {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now()) @db.Date
+  passage   String   // Requerido: e.g., "Juan 3:16-20"
+  seeds     Int      @default(10) // Semillas de fe (puntos) por leer
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
 }
