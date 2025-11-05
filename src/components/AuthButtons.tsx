@@ -7,27 +7,13 @@ export default function AuthButtons() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return (
-      <div className="flex gap-2">
-        <div className="w-20 h-10 bg-gray-200 animate-pulse rounded-full"></div>
-      </div>
-    );
+    return null;
   }
 
   if (session) {
-    return (
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-selapp-brown hidden sm:inline">
-          {session.user?.name || session.user?.email}
-        </span>
-        <button
-          onClick={() => signOut()}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm transition-all"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
-    );
+    // Para usuarios autenticados, no mostramos nada aquí
+    // El botón de cerrar sesión está en el sidebar
+    return null;
   }
 
   return (

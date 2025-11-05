@@ -150,3 +150,19 @@ model DailyReading {
   @@index([userId])
   @@index([date])
 }
+
+// Versículo del Día - un versículo fijo para cada día
+model VerseOfTheDay {
+  id          String   @id @default(cuid())
+  date        DateTime @unique @db.Date // La fecha del versículo
+  reference   String   // e.g., "Juan 3:16"
+  text        String   @db.Text // Texto completo del versículo
+  book        String   // Nombre del libro
+  chapter     Int      // Número de capítulo
+  verse       String   // Número(s) de versículo
+  version     String   @default("simple") // Versión de la Biblia
+  tema        String?  // Tema opcional
+  createdAt   DateTime @default(now())
+  
+  @@index([date])
+}
