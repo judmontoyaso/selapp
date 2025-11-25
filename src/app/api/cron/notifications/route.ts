@@ -22,6 +22,13 @@ export async function GET(request: Request) {
     const task = searchParams.get("task");
 
     switch (task) {
+      case "generate-devotional":
+        // Los devocionales se generan desde n8n
+        return NextResponse.json({ 
+          success: true, 
+          message: "Devocionales se generan automáticamente desde n8n" 
+        });
+
       case "verse-of-day":
         await notifyVerseOfTheDay();
         return NextResponse.json({ success: true, message: "Notificaciones del versículo del día enviadas" });
@@ -39,7 +46,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, message: "Verificación de rachas completada" });
 
       case "all":
-        // Ejecutar todas las tareas
+        // Ejecutar todas las tareas (excepto generate-devotional que maneja n8n)
         await notifyVerseOfTheDay();
         await notifyReadingReminder();
         await notifyDiaryReminder();
@@ -50,7 +57,7 @@ export async function GET(request: Request) {
         return NextResponse.json(
           { 
             error: "Tarea no especificada",
-            availableTasks: ["verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
+            availableTasks: ["generate-devotional", "verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
           },
           { status: 400 }
         );

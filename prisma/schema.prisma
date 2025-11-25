@@ -42,14 +42,13 @@ model sermons {
   date      DateTime   @default(now())
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  userId    String?
-  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
   messages  messages[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Tablas de la Biblia
 model books {
   booknum   Int     @id
   bookname  String
@@ -87,7 +86,6 @@ model favorites_verses {
   created_at  DateTime? @default(now()) @db.Timestamp(6)
 }
 
-// NextAuth.js Models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -101,8 +99,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -116,19 +113,20 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  sermons       sermons[]
-  dailyReadings DailyReading[]
-  diaryEntries  DiaryEntry[]
-  notifications Notification[]
+  id                String               @id @default(cuid())
+  name              String?
+  email             String               @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  accounts          Account[]
+  dailyReadings     DailyReading[]
+  diaryEntries      DiaryEntry[]
+  notifications     Notification[]
   pushSubscriptions PushSubscription[]
+  sessions          Session[]
+  sermons           sermons[]
+  devotionalAnswers DevotionalAnswer[]
 }
 
 model VerificationToken {
@@ -139,87 +137,122 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Daily Bible Reading Tracking
 model DailyReading {
   id        String   @id @default(cuid())
   userId    String
-  date      DateTime @default(now()) @db.Date
-  passage   String   // Requerido: e.g., "Juan 3:16-20"
-  seeds     Int      @default(10) // Semillas de fe (puntos) por leer
+  date      DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  passage   String?
+  seeds     Int      @default(10)
   createdAt DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
   @@index([userId])
   @@index([date])
 }
 
-// Versículo del Día - un versículo fijo para cada día
 model VerseOfTheDay {
-  id          String   @id @default(cuid())
-  date        DateTime @unique @db.Date // La fecha del versículo
-  reference   String   // e.g., "Juan 3:16"
-  text        String   @db.Text // Texto completo del versículo
-  book        String   // Nombre del libro
-  chapter     Int      // Número de capítulo
-  verse       String   // Número(s) de versículo
-  version     String   @default("simple") // Versión de la Biblia
-  tema        String?  // Tema opcional
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  reference String
+  text      String
+  book      String
+  chapter   Int
+  verse     String
+  version   String   @default("simple")
+  tema      String?
+  createdAt DateTime @default(now())
+
   @@index([date])
 }
 
-// Diario Personal - Entradas diarias del usuario
 model DiaryEntry {
-  id              String   @id @default(cuid())
-  userId          String
-  date            DateTime @default(now()) @db.Date // Fecha de la entrada
-  gratitude       String?  @db.Text // 🕊 Agradece por algo
-  thoughts        String?  @db.Text // 💭 ¿Qué estás pensando?
-  mood            String?  // 😊 ¿Cómo te sientes hoy? (emoji o texto)
-  moodScore       Int?     // Escala 1-5 opcional
-  achievements    String?  @db.Text // ✅ ¿Qué lograste o aprendiste hoy?
-  freeNote        String?  @db.Text // 🌙 Nota libre (opcional)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  userId       String
+  date         DateTime @db.Date
+  gratitude    String?
+  thoughts     String?
+  mood         String?
+  moodScore    Int?
+  achievements String?
+  freeNote     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
   @@index([userId])
   @@index([date])
 }
 
-// Sistema de Notificaciones
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // "verse_of_day", "reading_reminder", "diary_reminder", "achievement", "custom"
+  type      String
   title     String
-  message   String   @db.Text
-  icon      String?  // emoji o url de icono
-  link      String?  // URL a donde navegar al hacer click
+  message   String
+  icon      String?
+  link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
   @@index([createdAt])
 }
 
-// Suscripciones Push para notificaciones web
 model PushSubscription {
-  id         String   @id @default(cuid())
-  userId     String
-  endpoint   String   @unique
-  p256dh     String
-  auth       String
-  createdAt  DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Devotional Models
+model Devotional {
+  id             String               @id @default(cuid())
+  date           DateTime             @unique @db.Date
+  title          String
+  theme          String
+  verseReference String
+  verseText      String               @db.Text
+  reflection     String?              @db.Text
+  createdAt      DateTime             @default(now())
+  questions      DevotionalQuestion[]
+  userAnswers    DevotionalAnswer[]
+
+  @@index([date])
+}
+
+model DevotionalQuestion {
+  id           String             @id @default(cuid())
+  devotionalId String
+  order        Int
+  question     String             @db.Text
+  questionType String             @default("open")
+  devotional   Devotional         @relation(fields: [devotionalId], references: [id], onDelete: Cascade)
+  answers      DevotionalAnswer[]
+
+  @@index([devotionalId])
+}
+
+model DevotionalAnswer {
+  id           String             @id @default(cuid())
+  userId       String
+  devotionalId String
+  questionId   String
+  answer       String             @db.Text
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  devotional   Devotional         @relation(fields: [devotionalId], references: [id], onDelete: Cascade)
+  question     DevotionalQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, devotionalId])
 }

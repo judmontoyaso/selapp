@@ -39,6 +39,9 @@ export default function SermonChatPage() {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
+  const [editingSermon, setEditingSermon] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editPastor, setEditPastor] = useState("");
   const [viewMode, setViewMode] = useState<'document' | 'chat'>(
     searchParams.get('mode') === 'chat' ? 'chat' : 'document'
   );
@@ -281,6 +284,40 @@ export default function SermonChatPage() {
     }
   };
 
+  const handleEditSermon = () => {
+    setEditTitle(sermon?.title || "");
+    setEditPastor(sermon?.pastor || "");
+    setEditingSermon(true);
+  };
+
+  const handleSaveSermon = async () => {
+    if (!editTitle.trim() || !editPastor.trim()) {
+      alert("El título y el pastor son obligatorios");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await fetch(`/api/sermons/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editTitle, pastor: editPastor }),
+      });
+
+      if (response.ok) {
+        setEditingSermon(false);
+        fetchSermon();
+      } else {
+        alert("Error al actualizar el sermón");
+      }
+    } catch (error) {
+      console.error("Error updating sermon:", error);
+      alert("Error al actualizar el sermón");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("es-ES", {
@@ -339,11 +376,58 @@ export default function SermonChatPage() {
             className="rounded-lg"
           />
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{sermon.title}</h1>
-            <p className="text-sm text-selapp-beige-dark">
-              Pastor: {sermon.pastor} • {formatDate(sermon.date)}
-            </p>
+            {editingSermon ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-1 rounded-lg text-selapp-brown font-bold text-lg"
+                  placeholder="Título del sermón"
+                />
+                <input
+                  type="text"
+                  value={editPastor}
+                  onChange={(e) => setEditPastor(e.target.value)}
+                  className="w-full px-3 py-1 rounded-lg text-selapp-brown text-sm"
+                  placeholder="Nombre del pastor"
+                />
+              </div>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold">{sermon.title}</h1>
+                <p className="text-sm text-selapp-beige-dark">
+                  Pastor: {sermon.pastor} • {formatDate(sermon.date)}
+                </p>
+              </>
+            )}
           </div>
+          
+          {editingSermon ? (
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveSermon}
+                disabled={uploading}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                {uploading ? "Guardando..." : "Guardar"}
+              </button>
+              <button
+                onClick={() => setEditingSermon(false)}
+                disabled={uploading}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleEditSermon}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            >
+              ✏️ Editar
+            </button>
+          )}
           
           {/* Botón para cambiar entre vistas */}
           <button

@@ -41,11 +41,14 @@ export async function createNotification(params: CreateNotificationParams) {
 
     return notification;
   } catch (error) {
-    console.error("Error creating notification:", error);
+    console.error("Error checking streaks:", error);
     throw error;
   }
 }
 
+/**
+ * Generar devocional del día automáticamente a partir del versículo del día
+ */
 /**
  * Crear notificación del versículo del día para todos los usuarios
  */
