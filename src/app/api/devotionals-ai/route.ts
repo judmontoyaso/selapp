@@ -22,13 +22,15 @@ export async function GET(request: Request) {
         include: {
           questions: {
             orderBy: { order: "asc" },
-            include: includeAnswers && userId
+            ...(includeAnswers && userId
               ? {
-                  answers: {
-                    where: { userId },
+                  include: {
+                    answers: {
+                      where: { userId },
+                    },
                   },
                 }
-              : false,
+              : {}),
           },
         },
       });
@@ -119,12 +121,9 @@ export async function POST(request: Request) {
         theme,
         verseReference,
         verseText,
-        book: book || verseReference.split(" ")[0],
-        chapter: chapter || parseInt(verseReference.match(/\d+/)?.[0] || "1"),
-        verse: verse || verseReference.split(":")[1] || "1",
         reflection: devotionalData.reflection,
         questions: {
-          create: devotionalData.questions.map((q, index) => ({
+          create: devotionalData.questions.map((q: any, index: number) => ({
             order: index + 1,
             question: q.question,
             questionType: q.type || "open",
