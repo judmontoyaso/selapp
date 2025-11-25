@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { generateDevotional } from "@/lib/openai";
 
 // GET: Obtener devocionales (todos o de una fecha específica)
 export async function GET(request: Request) {
@@ -104,14 +103,8 @@ export async function POST(request: Request) {
       questions: questions || [],
     };
 
-    // Generar con OpenAI si se solicita
-    if (useAI && !title) {
-      try {
-        devotionalData = await generateDevotional(verseReference, verseText, theme);
-      } catch (error) {
-        console.error("Error con OpenAI, usando datos manuales:", error);
-      }
-    }
+    // Nota: La generación con IA se hace desde n8n
+    // Este endpoint solo guarda devocionales ya generados
 
     // Crear devocional en la base de datos
     const devotional = await prisma.devotional.create({
