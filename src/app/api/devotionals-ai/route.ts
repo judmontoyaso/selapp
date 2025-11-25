@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       return NextResponse.json(devotional);
     }
 
-    // Obtener todos los devocionales (ordenados por fecha)
+    // Obtener todos los devocionales (ordenados por fecha descendente)
     const devotionals = await prisma.devotional.findMany({
       orderBy: { date: "desc" },
       take: 30,
@@ -54,7 +54,13 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({ devotionals });
+    // Formatear fechas para asegurar compatibilidad
+    const formattedDevotionals = devotionals.map(d => ({
+      ...d,
+      date: d.date instanceof Date ? d.date.toISOString().split('T')[0] : d.date
+    }));
+
+    return NextResponse.json({ devotionals: formattedDevotionals });
   } catch (error) {
     console.error("Error fetching devotionals:", error);
     return NextResponse.json(

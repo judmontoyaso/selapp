@@ -33,6 +33,8 @@ export default function DevotionalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasAnswers, setHasAnswers] = useState(false);
 
   useEffect(() => {
     fetchDevotional();
@@ -50,12 +52,17 @@ export default function DevotionalDetailPage() {
         
         // Cargar respuestas existentes
         const existingAnswers: { [key: string]: string } = {};
+        let foundAnswers = false;
         data.questions.forEach((q: DevotionalQuestion) => {
           if (q.answers && q.answers.length > 0) {
             existingAnswers[q.id] = q.answers[0].answer;
+            foundAnswers = true;
           }
         });
         setAnswers(existingAnswers);
+        setHasAnswers(foundAnswers);
+        // No permitir edición hasta que usuario presione "Editar"
+        setIsEditing(!foundAnswers);
       }
     } catch (error) {
       console.error('Error fetching devotional:', error);
@@ -92,6 +99,8 @@ export default function DevotionalDetailPage() {
 
       await Promise.all(savePromises);
       alert('✅ Respuestas guardadas exitosamente');
+      setIsEditing(false);
+      setHasAnswers(true);
     } catch (error) {
       console.error('Error saving answers:', error);
       alert('❌ Error al guardar respuestas');
@@ -199,15 +208,25 @@ export default function DevotionalDetailPage() {
                     </p>
                     
                     {session ? (
-                      <textarea
-                        value={answers[question.id] || ''}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                        placeholder="Escribe tu reflexión aquí..."
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
-                                 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                 focus:ring-2 focus:ring-selapp-brown focus:border-transparent
-                                 min-h-[100px] resize-y"
-                      />
+                      <>
+                        {isEditing ? (
+                          <textarea
+                            value={answers[question.id] || ''}
+                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                            placeholder="Escribe tu reflexión aquí..."
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                                     bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                                     focus:ring-2 focus:ring-selapp-brown focus:border-transparent
+                                     min-h-[100px] resize-y"
+                          />
+                        ) : (
+                          <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                              {answers[question.id] || <span className="italic text-gray-400">Sin respuesta</span>}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                         Inicia sesión para guardar tus respuestas
@@ -217,27 +236,53 @@ export default function DevotionalDetailPage() {
                 ))}
               </div>
 
-              {/* Botón Guardar */}
+              {/* Botones Editar/Guardar/Cancelar */}
               {session && (
-                <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={handleSaveAnswers}
-                    disabled={saving}
-                    className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold 
-                             py-3 px-8 rounded-lg transition-colors disabled:opacity-50 
-                             disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {saving ? (
-                      <>
-                        <span className="animate-spin">⏳</span>
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        💾 Guardar Respuestas
-                      </>
-                    )}
-                  </button>
+                <div className="mt-6 flex justify-end gap-3">
+                  {!isEditing && hasAnswers && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold 
+                               py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      ✏️ Editar Respuestas
+                    </button>
+                  )}
+                  
+                  {isEditing && (
+                    <>
+                      {hasAnswers && (
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            fetchDevotional(); // Recargar respuestas originales
+                          }}
+                          className="bg-gray-400 hover:bg-gray-500 text-white font-bold 
+                                   py-3 px-8 rounded-lg transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                      <button
+                        onClick={handleSaveAnswers}
+                        disabled={saving}
+                        className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold 
+                                 py-3 px-8 rounded-lg transition-colors disabled:opacity-50 
+                                 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {saving ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            💾 Guardar Respuestas
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

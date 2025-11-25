@@ -159,7 +159,7 @@ export default function DevotionalsPage() {
                       </p>
                       
                       <p className="text-gray-700 dark:text-gray-300 italic mb-4 line-clamp-2">
-                        "{devotional.verseText}"
+                        &quot;{devotional.verseText}&quot;
                       </p>
                       
                       {devotional.reflection && (
