@@ -23,5 +23,9 @@
   ],
   "categories": ["lifestyle", "productivity"],
   "lang": "es",
-  "dir": "ltr"
+  "dir": "ltr",
+  "permissions": [
+    "notifications"
+  ],
+  "gcm_sender_id": "103953800507"
 }

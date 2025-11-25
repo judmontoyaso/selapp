@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import Sidebar from "@/components/Sidebar";
+import NotificationBell from "@/components/NotificationBell";
+import PushNotificationSetup from "@/components/PushNotificationSetup";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +35,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <Sidebar />
+          <div className="fixed top-4 right-4 z-50">
+            <NotificationBell />
+          </div>
+          <PushNotificationSetup />
           {children}
         </SessionProvider>
       </body>

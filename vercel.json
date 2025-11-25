@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/notifications?task=verse-of-day",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?task=all",
+      "schedule": "0 21 * * *"
+    }
+  ]
+}
