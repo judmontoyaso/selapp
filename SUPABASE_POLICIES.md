@@ -295,6 +295,50 @@ WITH CHECK (auth.uid() = user_id);
 
 ---
 
+## Políticas para Tabla DiaryEntry (Diario Personal)
+
+La tabla `DiaryEntry` también necesita políticas RLS. Ejecuta este SQL en **Supabase Dashboard → SQL Editor**:
+
+```sql
+-- =====================================================
+-- POLÍTICAS RLS PARA TABLA DiaryEntry
+-- =====================================================
+
+-- Habilitar Row Level Security en la tabla DiaryEntry
+ALTER TABLE "DiaryEntry" ENABLE ROW LEVEL SECURITY;
+
+-- Política 1: SELECT - Permitir lectura pública (el API verifica userId)
+CREATE POLICY "Usuarios pueden leer entradas del diario"
+ON "DiaryEntry" FOR SELECT
+TO public
+USING (true);
+
+-- Política 2: INSERT - Permitir creación
+CREATE POLICY "Usuarios pueden crear entradas del diario"
+ON "DiaryEntry" FOR INSERT
+TO public
+WITH CHECK (true);
+
+-- Política 3: UPDATE - Permitir actualización
+CREATE POLICY "Usuarios pueden actualizar entradas del diario"
+ON "DiaryEntry" FOR UPDATE
+TO public
+USING (true)
+WITH CHECK (true);
+
+-- Política 4: DELETE - Permitir eliminación
+CREATE POLICY "Usuarios pueden eliminar entradas del diario"
+ON "DiaryEntry" FOR DELETE
+TO public
+USING (true);
+```
+
+**NOTA**: Estas políticas son públicas porque la seguridad se maneja a nivel de aplicación (NextAuth + API). El API de `/api/diary` verifica que el usuario solo pueda acceder a sus propias entradas mediante el `userId` filtrado en las queries de Prisma.
+
+**Archivo SQL**: `prisma/migrations/add_diary_rls_policies.sql`
+
+---
+
 ## Recursos
 
 - [Supabase RLS Documentation](https://supabase.com/docs/guides/auth/row-level-security)
@@ -302,6 +346,16 @@ WITH CHECK (auth.uid() = user_id);
 - [Service Role Key](https://supabase.com/docs/guides/api/api-keys)
 
 ---
+
+## Solución Rápida para Error del Diario en Producción
+
+**El problema**: La tabla `DiaryEntry` no permite operaciones porque RLS está habilitado sin políticas.
+
+**Solución inmediata**:
+1. Ve a **Supabase Dashboard** → **SQL Editor**
+2. Ejecuta el SQL de arriba (sección "Políticas para Tabla DiaryEntry")
+3. Redeploy en Vercel (opcional, no debería ser necesario)
+4. ✅ El diario debería funcionar
 
 **¿Cuál opción prefieres?**
 - A) Ejecuto las políticas públicas (desarrollo/pruebas)

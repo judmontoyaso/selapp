@@ -16,6 +16,7 @@ export default function Sidebar() {
     { href: "/devotionals", icon: "🙏", label: "Devocionales" },
     { href: "/verse-search", icon: "🔎", label: "Buscar Versículos" },
     { href: "/notes", icon: "📓", label: "Diario" },
+    { href: "/notifications", icon: "🔔", label: "Notificaciones" },
   ];
 
   const isActive = (path: string) => pathname === path;

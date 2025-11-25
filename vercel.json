@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/notifications?task=verse-of-day",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?task=reading-reminder",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?task=diary-reminder",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?task=check-streaks",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/test-notification",
+      "schedule": "34 21 * * *"
+    }
+  ]
+}

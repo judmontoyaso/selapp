@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba de Notificaciones Push</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #FAF5EB;
+    }
+    .btn {
+      background: #8B4513;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .btn:hover {
+      background: #6B4E3D;
+    }
+    .status {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      background: white;
+    }
+    .success { border-left: 4px solid #10b981; }
+    .error { border-left: 4px solid #ef4444; }
+    .info { border-left: 4px solid #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>🔔 Prueba de Notificaciones Push</h1>
+  
+  <div id="status"></div>
+
+  <button class="btn" onclick="checkPermission()">1. Verificar Permiso</button>
+  <button class="btn" onclick="requestPermission()">2. Solicitar Permiso</button>
+  <button class="btn" onclick="registerServiceWorker()">3. Registrar Service Worker</button>
+  <button class="btn" onclick="subscribeToPush()">4. Suscribirse a Push</button>
+  <button class="btn" onclick="testNotification()">5. Enviar Notificación de Prueba</button>
+  <button class="btn" onclick="sendServerPush()">6. Enviar Push desde Servidor</button>
+
+  <script>
+    let swRegistration = null;
+
+    function log(message, type = 'info') {
+      const status = document.getElementById('status');
+      const div = document.createElement('div');
+      div.className = `status ${type}`;
+      div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+      status.insertBefore(div, status.firstChild);
+    }
+
+    function checkPermission() {
+      const perm = Notification.permission;
+      log(`Estado del permiso: <strong>${perm}</strong>`, perm === 'granted' ? 'success' : 'info');
+    }
+
+    async function requestPermission() {
+      try {
+        const perm = await Notification.requestPermission();
+        log(`Permiso ${perm === 'granted' ? 'CONCEDIDO ✅' : 'DENEGADO ❌'}`, perm === 'granted' ? 'success' : 'error');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function registerServiceWorker() {
+      try {
+        swRegistration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+        await navigator.serviceWorker.ready;
+        log(`Service Worker registrado ✅<br>Scope: ${swRegistration.scope}`, 'success');
+      } catch (error) {
+        log(`Error registrando SW: ${error.message}`, 'error');
+      }
+    }
+
+    async function subscribeToPush() {
+      try {
+        if (!swRegistration) {
+          log('Primero registra el Service Worker', 'error');
+          return;
+        }
+
+        const vapidPublicKey = 'BDsfSl1V7yscMU4qomO5-RnHio82laly12sOF8bEgjM5uIG8SEs3wRIbPdvK_psttnxmzQKgSDji8uzllwrvdEk';
+        const subscription = await swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        });
+
+        log(`Suscrito a Push ✅<br>Endpoint: ${subscription.endpoint.substring(0, 80)}...`, 'success');
+
+        // Guardar en servidor
+        const response = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        });
+
+        if (response.ok) {
+          log('Suscripción guardada en servidor ✅', 'success');
+        }
+      } catch (error) {
+        log(`Error suscribiendo: ${error.message}`, 'error');
+      }
+    }
+
+    async function testNotification() {
+      if (Notification.permission !== 'granted') {
+        log('Necesitas dar permiso primero', 'error');
+        return;
+      }
+
+      new Notification('🧪 Notificación Local', {
+        body: 'Esta es una notificación directa desde JavaScript',
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        tag: 'test'
+      });
+
+      log('Notificación local enviada ✅', 'success');
+    }
+
+    async function sendServerPush() {
+      try {
+        const response = await fetch('/api/test-push');
+        const data = await response.json();
+        
+        if (data.success) {
+          log(`Push enviado desde servidor ✅<br>Hora: ${data.time}`, 'success');
+        } else {
+          log(`Error: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    // Auto-check al cargar
+    window.onload = () => {
+      checkPermission();
+      log('Página cargada - Usa los botones en orden (1→6)', 'info');
+    };
+  </script>
+</body>
+</html>

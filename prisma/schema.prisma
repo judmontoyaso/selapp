@@ -126,6 +126,8 @@ model User {
   sermons       sermons[]
   dailyReadings DailyReading[]
   diaryEntries  DiaryEntry[]
+  notifications Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 model VerificationToken {
@@ -187,4 +189,36 @@ model DiaryEntry {
   @@unique([userId, date])
   @@index([userId])
   @@index([date])
+}
+
+// Sistema de Notificaciones
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // "verse_of_day", "reading_reminder", "diary_reminder", "achievement", "custom"
+  title     String
+  message   String   @db.Text
+  icon      String?  // emoji o url de icono
+  link      String?  // URL a donde navegar al hacer click
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// Suscripciones Push para notificaciones web
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
