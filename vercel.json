@@ -5,20 +5,8 @@
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/cron/notifications?task=reading-reminder",
-      "schedule": "0 20 * * *"
-    },
-    {
-      "path": "/api/cron/notifications?task=diary-reminder",
+      "path": "/api/cron/notifications?task=all",
       "schedule": "0 21 * * *"
-    },
-    {
-      "path": "/api/cron/notifications?task=check-streaks",
-      "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/test-notification",
-      "schedule": "34 21 * * *"
     }
   ]
 }
