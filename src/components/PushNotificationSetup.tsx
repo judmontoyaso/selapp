@@ -64,16 +64,38 @@ export default function PushNotificationSetup() {
   const renewSubscriptionIfNeeded = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      let subscription = await registration.pushManager.getSubscription();
       
       if (!subscription) {
-        console.log("⚠️ Suscripción perdida, renovando...");
+        console.log("⚠️ No hay suscripción, creando una nueva...");
         await subscribeToPush(registration);
       } else {
-        console.log("✅ Suscripción activa");
+        // Verificar si la suscripción es válida en el servidor
+        const checkResponse = await fetch("/api/push/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+        
+        if (!checkResponse.ok || !(await checkResponse.json()).exists) {
+          console.log("⚠️ Suscripción no válida en servidor, renovando...");
+          await subscription.unsubscribe();
+          await subscribeToPush(registration);
+        } else {
+          console.log("✅ Suscripción activa y válida");
+        }
       }
     } catch (error) {
       console.error("Error verificando suscripción:", error);
+      // Si hay error, intentar crear nueva suscripción
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const oldSub = await registration.pushManager.getSubscription();
+        if (oldSub) await oldSub.unsubscribe();
+        await subscribeToPush(registration);
+      } catch (e) {
+        console.error("Error renovando suscripción:", e);
+      }
     }
   };
 
