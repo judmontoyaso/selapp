@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateDevotional } from "@/lib/openai";
 
 // Webhook para recibir devocionales desde n8n
 export async function POST(request: Request) {
@@ -18,14 +17,10 @@ export async function POST(request: Request) {
       date,
       verseReference,
       verseText,
-      book,
-      chapter,
-      verse,
       theme,
       title,
       reflection,
       questions,
-      generateWithAI = true,
     } = body;
 
     // Validar campos requeridos
@@ -39,22 +34,19 @@ export async function POST(request: Request) {
       );
     }
 
-    let devotionalData = {
+    // n8n envía los datos completos ya generados con OpenAI
+    const devotionalData = {
       title: title || theme,
       reflection: reflection || "",
       questions: questions || [],
     };
 
-    // Generar con OpenAI si no vienen los datos completos
-    if (generateWithAI && (!title || !questions || questions.length === 0)) {
-      console.log(`🤖 Generando devocional con OpenAI para ${verseReference}...`);
-      try {
-        devotionalData = await generateDevotional(verseReference, verseText, theme);
-        console.log("✅ Devocional generado con éxito");
-      } catch (error) {
-        console.error("❌ Error con OpenAI:", error);
-        // Continuar con datos manuales si falla OpenAI
-      }
+    // Validar que vengan las preguntas
+    if (!questions || questions.length === 0) {
+      return NextResponse.json(
+        { error: "Se requieren al menos 1 pregunta" },
+        { status: 400 }
+      );
     }
 
     // Crear devocional en la base de datos
@@ -86,7 +78,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       devotional,
-      generatedWithAI: generateWithAI && devotionalData.questions.length > 0,
     });
   } catch (error: any) {
     console.error("Error en webhook n8n:", error);
@@ -115,10 +106,13 @@ export async function GET() {
         verseReference: "Juan 3:16",
         verseText: "Porque de tal manera amó Dios al mundo...",
         theme: "Amor de Dios",
-        book: "Juan",
-        chapter: 3,
-        verse: "16",
-        generateWithAI: true,
+        title: "El amor infinito de Dios",
+        reflection: "Texto de reflexión...",
+        questions: [
+          { question: "¿Pregunta 1?", type: "open" },
+          { question: "¿Pregunta 2?", type: "open" },
+          { question: "¿Pregunta 3?", type: "open" }
+        ],
       },
     },
   });
