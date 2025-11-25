@@ -4,7 +4,6 @@ import {
   notifyReadingReminder,
   notifyDiaryReminder,
   checkAndNotifyStreaks,
-  generateDailyDevotional,
 } from "@/lib/notifications";
 
 // Este endpoint debe ser protegido con una API key en producción
@@ -24,8 +23,11 @@ export async function GET(request: Request) {
 
     switch (task) {
       case "generate-devotional":
-        await generateDailyDevotional();
-        return NextResponse.json({ success: true, message: "Devocional generado" });
+        // Los devocionales se generan desde n8n
+        return NextResponse.json({ 
+          success: true, 
+          message: "Devocionales se generan automáticamente desde n8n" 
+        });
 
       case "verse-of-day":
         await notifyVerseOfTheDay();
@@ -44,8 +46,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, message: "Verificación de rachas completada" });
 
       case "all":
-        // Ejecutar todas las tareas
-        await generateDailyDevotional();
+        // Ejecutar todas las tareas (excepto generate-devotional que maneja n8n)
         await notifyVerseOfTheDay();
         await notifyReadingReminder();
         await notifyDiaryReminder();
