@@ -57,12 +57,12 @@ export async function sendPushNotification(userId: string, data: PushNotificatio
           );
           console.log(`✅ Push enviado a ${sub.endpoint.substring(0, 50)}...`);
         } catch (error: any) {
-          // Si la suscripción expiró, eliminarla
-          if (error.statusCode === 410 || error.statusCode === 404) {
-            console.log(`🗑️ Eliminando suscripción expirada: ${sub.id}`);
-            await prisma.pushSubscription.delete({ where: { id: sub.id } });
+          // Si la suscripción expiró o es inválida, eliminarla
+          if (error.statusCode === 410 || error.statusCode === 404 || error.statusCode === 401) {
+            console.log(`🗑️ Eliminando suscripción expirada (${error.statusCode}): ${sub.id}`);
+            await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
           } else {
-            console.error("Error enviando push:", error);
+            console.error(`❌ Error enviando push (statusCode: ${error.statusCode}):`, error.message);
           }
           throw error;
         }
@@ -72,7 +72,12 @@ export async function sendPushNotification(userId: string, data: PushNotificatio
     const successful = results.filter((r) => r.status === "fulfilled").length;
     const failed = results.filter((r) => r.status === "rejected").length;
 
-    console.log(`📊 Push enviado: ${successful} exitosos, ${failed} fallidos`);
+    console.log(`📊 Push para usuario ${userId}: ${successful} exitosos, ${failed} fallidos`);
+    
+    // Si todas fallaron, notificar al usuario que debe reactivar
+    if (successful === 0 && subscriptions.length > 0) {
+      console.log(`⚠️ Usuario ${userId} necesita reactivar notificaciones`);
+    }
   } catch (error) {
     console.error("Error en sendPushNotification:", error);
     throw error;
@@ -115,8 +120,9 @@ export async function sendPushToAll(data: PushNotificationData) {
             payload
           );
         } catch (error: any) {
-          if (error.statusCode === 410 || error.statusCode === 404) {
-            await prisma.pushSubscription.delete({ where: { id: sub.id } });
+          // Eliminar suscripciones expiradas o inválidas
+          if (error.statusCode === 410 || error.statusCode === 404 || error.statusCode === 401) {
+            await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
           }
           throw error;
         }
@@ -127,6 +133,8 @@ export async function sendPushToAll(data: PushNotificationData) {
     const failed = results.filter((r) => r.status === "rejected").length;
 
     console.log(`📊 Push masivo: ${successful} exitosos, ${failed} fallidos de ${subscriptions.length} total`);
+    
+    return { successful, failed, total: subscriptions.length };
   } catch (error) {
     console.error("Error en sendPushToAll:", error);
     throw error;

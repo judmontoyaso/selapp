@@ -25,6 +25,11 @@ export default function PushNotificationSetup() {
       registerServiceWorker();
     }
 
+    // Renovar suscripción cada vez que se carga la app si ya hay permiso
+    if (Notification.permission === "granted") {
+      renewSubscriptionIfNeeded();
+    }
+
     // Mostrar prompt después de 3 segundos si no han dado permiso
     if (Notification.permission === "default") {
       const timer = setTimeout(() => {
@@ -53,6 +58,22 @@ export default function PushNotificationSetup() {
       }
     } catch (error) {
       console.error("❌ Error registrando Service Worker:", error);
+    }
+  };
+
+  const renewSubscriptionIfNeeded = async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        console.log("⚠️ Suscripción perdida, renovando...");
+        await subscribeToPush(registration);
+      } else {
+        console.log("✅ Suscripción activa");
+      }
+    } catch (error) {
+      console.error("Error verificando suscripción:", error);
     }
   };
 
