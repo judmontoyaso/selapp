@@ -4,6 +4,7 @@ import {
   notifyReadingReminder,
   notifyDiaryReminder,
   checkAndNotifyStreaks,
+  generateDailyDevotional,
 } from "@/lib/notifications";
 
 // Este endpoint debe ser protegido con una API key en producción
@@ -22,6 +23,10 @@ export async function GET(request: Request) {
     const task = searchParams.get("task");
 
     switch (task) {
+      case "generate-devotional":
+        await generateDailyDevotional();
+        return NextResponse.json({ success: true, message: "Devocional generado" });
+
       case "verse-of-day":
         await notifyVerseOfTheDay();
         return NextResponse.json({ success: true, message: "Notificaciones del versículo del día enviadas" });
@@ -40,6 +45,7 @@ export async function GET(request: Request) {
 
       case "all":
         // Ejecutar todas las tareas
+        await generateDailyDevotional();
         await notifyVerseOfTheDay();
         await notifyReadingReminder();
         await notifyDiaryReminder();
@@ -50,7 +56,7 @@ export async function GET(request: Request) {
         return NextResponse.json(
           { 
             error: "Tarea no especificada",
-            availableTasks: ["verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
+            availableTasks: ["generate-devotional", "verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
           },
           { status: 400 }
         );

@@ -67,6 +67,11 @@ export async function PUT(request: Request, context: any) {
   }
 }
 
+// PATCH: Actualizar sermón (alternativa a PUT)
+export async function PATCH(request: Request, context: any) {
+  return PUT(request, context);
+}
+
 // DELETE: Eliminar sermón
 export async function DELETE(request: Request, context: any) {
   const { params } = context as { params: { id: string } };

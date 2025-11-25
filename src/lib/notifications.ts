@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushNotification } from "@/lib/webpush";
+import { generateDevotional } from "@/lib/openai";
 
 interface CreateNotificationParams {
   userId: string;
@@ -41,7 +42,93 @@ export async function createNotification(params: CreateNotificationParams) {
 
     return notification;
   } catch (error) {
-    console.error("Error creating notification:", error);
+    console.error("Error checking streaks:", error);
+    throw error;
+  }
+}
+
+/**
+ * Generar devocional del día automáticamente a partir del versículo del día
+ */
+export async function generateDailyDevotional() {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Verificar si ya existe devocional para hoy
+    const existingDevotional = await prisma.devotional.findUnique({
+      where: { date: today },
+    });
+
+    if (existingDevotional) {
+      console.log(`✅ Devocional para ${today.toISOString().split('T')[0]} ya existe`);
+      return existingDevotional;
+    }
+
+    // Obtener el versículo del día
+    const verseOfDay = await prisma.verseOfTheDay.findUnique({
+      where: { date: today },
+    });
+
+    if (!verseOfDay) {
+      console.log(`⚠️ No hay versículo del día para ${today.toISOString().split('T')[0]}`);
+      return null;
+    }
+
+    console.log(`🤖 Generando devocional con OpenAI para ${verseOfDay.reference}...`);
+
+    // Generar devocional con OpenAI
+    const devotionalContent = await generateDevotional(
+      verseOfDay.reference,
+      verseOfDay.text,
+      verseOfDay.tema || "Reflexión Diaria"
+    );
+
+    // Crear devocional en la base de datos
+    const devotional = await prisma.devotional.create({
+      data: {
+        date: today,
+        title: devotionalContent.title,
+        theme: verseOfDay.tema || "Reflexión Diaria",
+        verseReference: verseOfDay.reference,
+        verseText: verseOfDay.text,
+        reflection: devotionalContent.reflection,
+        questions: {
+          create: devotionalContent.questions.map((q, index) => ({
+            order: index + 1,
+            question: q.question,
+            questionType: q.type || "open",
+          })),
+        },
+      },
+      include: {
+        questions: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    console.log(`✅ Devocional creado: ${devotional.title}`);
+
+    // Notificar a todos los usuarios
+    const users = await prisma.user.findMany();
+    const notificationPromises = users.map((user) =>
+      createNotification({
+        userId: user.id,
+        type: "verse_of_day",
+        title: "📖 Nuevo Devocional Disponible",
+        message: `${devotional.title} - ${verseOfDay.reference}`,
+        icon: "📖",
+        link: "/devotionals",
+      })
+    );
+
+    await Promise.allSettled(notificationPromises);
+    console.log(`✅ Notificaciones enviadas a ${users.length} usuarios`);
+
+    return devotional;
+  } catch (error) {
+    console.error("Error generando devocional diario:", error);
     throw error;
   }
 }
