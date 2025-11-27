@@ -17,9 +17,9 @@ SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
 NEXT_PUBLIC_STORAGE_BUCKET=Data_bucket
 
 # VAPID Keys para Push (IMPORTANTE)
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=BDsfSl1V7yscMU4qomO5-RnHio82laly12sOF8bEgjM5uIG8SEs3wRIbPdvK_psttnxmzQKgSDji8uzllwrvdEk
-VAPID_PRIVATE_KEY=jKdDhCAVuRz_G5Mt2UOW_tAEw5ZKLlreLpW9yCpOOpE
-VAPID_SUBJECT=mailto:juandavidsolorzano73@gmail.com
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BLV86YsLLQpv0Ht826VoC3sM1ENAtgBBerUM6TKvtqPbI7u3V3ZwYMnfWvUdHX95WURyWv8YPkQFRQtSgqiJ2n4
+VAPID_PRIVATE_KEY=6iwj_Rv5LxLMxlwUIno6OMcsPDtwy3PI5eqGV0D3fus
+VAPID_SUBJECT=mailto:admin@selapp.com
 
 # NextAuth
 NEXTAUTH_URL=https://tu-dominio.vercel.app
@@ -71,7 +71,7 @@ vercel --prod
 
 3. **Prueba el endpoint de test:**
    ```
-   https://tu-dominio.vercel.app/test-push.html
+   https://tu-dominio.vercel.app/test-push
    ```
 
 4. **Verifica los Cron Jobs en Vercel:**
