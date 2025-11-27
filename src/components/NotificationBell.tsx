@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { Bell, Check, Trash2, ExternalLink } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -130,23 +131,11 @@ export default function NotificationBell() {
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-selapp-brown hover:bg-selapp-beige/30 rounded-full transition-colors"
+        className="relative p-3 bg-white hover:bg-white/80 backdrop-blur-md text-selapp-brown rounded-full transition-all shadow-sm hover:shadow-md border border-selapp-beige-dark/50"
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+        <Bell size={24} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-sm border-2 border-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -162,39 +151,38 @@ export default function NotificationBell() {
           />
 
           {/* Notifications Panel */}
-          <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-selapp-brown/20 z-40 max-h-[32rem] flex flex-col">
+          <div className="absolute right-0 mt-4 w-80 md:w-96 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-selapp-beige-dark/50 z-40 max-h-[32rem] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-4 border-b border-selapp-brown/20 flex justify-between items-center">
-              <h3 className="font-bold text-selapp-brown">Notificaciones</h3>
+            <div className="p-4 border-b border-selapp-beige-dark/50 flex justify-between items-center bg-selapp-beige/30">
+              <h3 className="font-bold text-selapp-brown font-serif text-lg">Notificaciones</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   disabled={loading}
-                  className="text-sm text-selapp-accent hover:underline"
+                  className="text-xs font-medium text-selapp-accent hover:text-selapp-brown transition-colors"
                 >
-                  Marcar todas como leídas
+                  Marcar todas leídas
                 </button>
               )}
             </div>
 
             {/* Notifications List */}
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 custom-scrollbar">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-selapp-brown/60">
-                  <span className="text-4xl block mb-2">🔔</span>
-                  <p>No tienes notificaciones</p>
+                <div className="p-12 text-center text-selapp-brown/40 flex flex-col items-center">
+                  <Bell size={48} className="mb-4 opacity-20" />
+                  <p className="font-medium">No tienes notificaciones</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 border-b border-selapp-brown/10 hover:bg-selapp-beige/20 transition-colors ${
-                      !notification.read ? "bg-selapp-beige/10" : ""
-                    }`}
+                    className={`p-4 border-b border-selapp-beige-dark/30 hover:bg-selapp-beige/30 transition-colors ${!notification.read ? "bg-selapp-accent/5" : ""
+                      }`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                       {/* Icon */}
-                      <div className="flex-shrink-0 text-2xl">
+                      <div className="flex-shrink-0 text-2xl bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-selapp-beige-dark/30">
                         {getIcon(notification)}
                       </div>
 
@@ -202,35 +190,34 @@ export default function NotificationBell() {
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2 mb-1">
                           <h4
-                            className={`font-semibold text-sm ${
-                              !notification.read
+                            className={`font-semibold text-sm ${!notification.read
                                 ? "text-selapp-brown"
                                 : "text-selapp-brown/70"
-                            }`}
+                              }`}
                           >
                             {notification.title}
                           </h4>
                           {!notification.read && (
                             <button
                               onClick={() => markAsRead(notification.id)}
-                              className="text-selapp-accent hover:text-selapp-accent-dark text-xs flex-shrink-0"
+                              className="text-selapp-accent hover:text-selapp-brown transition-colors p-1"
                               title="Marcar como leída"
                             >
-                              ✓
+                              <Check size={14} />
                             </button>
                           )}
                         </div>
 
-                        <p className="text-sm text-selapp-brown/70 line-clamp-2 mb-2">
+                        <p className="text-sm text-selapp-brown/70 line-clamp-2 mb-3 leading-relaxed">
                           {notification.message}
                         </p>
 
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-selapp-brown/50">
+                        <div className="flex justify-between items-center pt-2 border-t border-dashed border-selapp-beige-dark/30">
+                          <span className="text-[10px] uppercase tracking-wider text-selapp-brown/40 font-bold">
                             {getTimeAgo(notification.createdAt)}
                           </span>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-3">
                             {notification.link && (
                               <Link
                                 href={notification.link}
@@ -238,16 +225,17 @@ export default function NotificationBell() {
                                   markAsRead(notification.id);
                                   setIsOpen(false);
                                 }}
-                                className="text-xs text-selapp-accent hover:underline"
+                                className="text-xs text-selapp-accent hover:text-selapp-brown font-medium flex items-center gap-1 transition-colors"
                               >
-                                Ver más →
+                                Ver <ExternalLink size={10} />
                               </Link>
                             )}
                             <button
                               onClick={() => deleteNotification(notification.id)}
-                              className="text-xs text-red-500 hover:underline"
+                              className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                              title="Eliminar"
                             >
-                              Eliminar
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
@@ -260,13 +248,13 @@ export default function NotificationBell() {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="p-3 border-t border-selapp-brown/20 text-center">
+              <div className="p-3 border-t border-selapp-beige-dark/50 text-center bg-selapp-beige/30">
                 <Link
                   href="/notifications"
                   onClick={() => setIsOpen(false)}
-                  className="text-sm text-selapp-accent hover:underline"
+                  className="text-xs font-bold text-selapp-brown/60 hover:text-selapp-brown uppercase tracking-widest transition-colors"
                 >
-                  Ver todas las notificaciones
+                  Ver historial completo
                 </Link>
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Search, Sparkles, BookOpen, ChevronLeft, ArrowRight, Lightbulb, Loader2 } from "lucide-react";
 
 interface FavoriteVerse {
   reference: string;
@@ -32,13 +33,13 @@ export default function VerseSearchPage() {
   const [searchVersion, setSearchVersion] = useState('simple');
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<FavoriteVerse | null>(null);
-  const [currentSearchInfo, setCurrentSearchInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [currentSearchInfo, setCurrentSearchInfo] = useState<{ book: string, chapter: number, verse: string } | null>(null);
 
   // Estados para versículo aleatorio
   const [randomVersion, setRandomVersion] = useState('simple');
   const [loadingRandom, setLoadingRandom] = useState(false);
   const [randomResult, setRandomResult] = useState<FavoriteVerse | null>(null);
-  const [currentRandomInfo, setCurrentRandomInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [currentRandomInfo, setCurrentRandomInfo] = useState<{ book: string, chapter: number, verse: string } | null>(null);
 
   // Función para buscar versículo por referencia
   const searchVerse = async () => {
@@ -95,15 +96,15 @@ export default function VerseSearchPage() {
     setLoadingRandom(true);
     try {
       let url = `/api/devotionals/random?version=${versionToUse}`;
-      
+
       // Si se está cambiando versión de un versículo ya cargado, mantener el mismo versículo
       if (version && currentRandomInfo) {
         url += `&book=${encodeURIComponent(currentRandomInfo.book)}&chapter=${currentRandomInfo.chapter}&verse=${currentRandomInfo.verse}`;
       }
-      
+
       const res = await fetch(url);
       const data = await res.json();
-      
+
       if (res.ok) {
         setRandomResult(data);
         setCurrentRandomInfo({
@@ -131,56 +132,65 @@ export default function VerseSearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white p-6">
-      <div className="container mx-auto max-w-5xl">
-        <Link href="/" className="text-selapp-brown hover:underline mb-6 inline-block">
-          ← Volver al inicio
+    <div className="min-h-screen bg-selapp-beige selection:bg-selapp-accent/30 p-6 pb-16">
+      <div className="container mx-auto max-w-6xl">
+        <Link href="/" className="group inline-flex items-center gap-2 text-selapp-brown hover:text-selapp-brown-dark mb-8 transition-colors">
+          <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Volver al inicio</span>
         </Link>
 
-        <h1 className="text-4xl font-bold text-selapp-brown mb-2 text-center">Versículos Bíblicos</h1>
-        <p className="text-center text-gray-600 mb-8">
-          Busca referencias específicas o descubre versículos aleatorios
-        </p>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-selapp-brown mb-4">
+            Versículos Bíblicos
+          </h1>
+          <p className="text-lg text-selapp-brown-light font-light max-w-2xl mx-auto">
+            Busca referencias específicas o descubre versículos sorpresa que inspiren tu día
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* SECCIÓN 1: Buscar por Referencia */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🔍</span>
-              <h2 className="text-2xl font-bold text-selapp-brown">Buscar por Referencia</h2>
+          <div className="selapp-card p-8 h-fit">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-selapp-brown/10 rounded-2xl flex items-center justify-center text-selapp-brown">
+                <Search size={28} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-bold text-selapp-brown">Buscar por Referencia</h2>
+                <p className="text-sm text-selapp-brown-light">Ingresa una referencia específica</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Ingresa una referencia bíblica específica
-            </p>
 
             {/* Selector de versión para búsqueda */}
-            <div className="mb-4">
-              <label htmlFor="search-version" className="block text-sm font-medium text-gray-700 mb-2">
-                Versión
+            <div className="mb-5">
+              <label htmlFor="search-version" className="block text-sm font-bold text-selapp-brown mb-2 uppercase tracking-wide">
+                Versión Bíblica
               </label>
-              <select 
+              <select
                 id="search-version"
-                value={searchVersion} 
-                onChange={(e) => handleSearchVersionChange(e.target.value)} 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-selapp-brown"
+                value={searchVersion}
+                onChange={(e) => handleSearchVersionChange(e.target.value)}
+                className="selapp-input w-full"
               >
                 {bibleVersions.map(v => (
                   <option key={v.code} value={v.code}>{v.name}</option>
                 ))}
               </select>
               {searchResult && currentSearchInfo && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Cambiar la versión mantendrá la misma referencia
+                <p className="text-xs text-selapp-brown-light mt-2 flex items-center gap-1">
+                  <Lightbulb size={12} />
+                  Cambiar la versión mantendrá la misma referencia
                 </p>
               )}
             </div>
 
             {/* Campo de búsqueda */}
-            <div className="mb-4">
-              <label htmlFor="verse-query" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-6">
+              <label htmlFor="verse-query" className="block text-sm font-bold text-selapp-brown mb-2 uppercase tracking-wide">
                 Referencia
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <input
                   id="verse-query"
                   type="text"
@@ -188,71 +198,82 @@ export default function VerseSearchPage() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchVerse()}
                   placeholder="Ej: Juan 3:16"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-selapp-brown"
+                  className="selapp-input flex-1"
                 />
-                <button 
-                  onClick={searchVerse} 
-                  disabled={loading} 
-                  className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold px-6 py-3 rounded-lg disabled:opacity-50"
+                <button
+                  onClick={searchVerse}
+                  disabled={loading}
+                  className="selapp-button px-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {loading ? '⏳' : '🔍'}
+                  {loading ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Search size={20} />
+                  )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Ej: Juan 3:16, Génesis 1:1, Salmos 23:1
+              <p className="text-xs text-selapp-brown-light/70 mt-2">
+                Ejemplos: Juan 3:16, Génesis 1:1, Salmos 23:1
               </p>
             </div>
 
             {/* Resultado de búsqueda */}
             {searchResult ? (
-              <div className="bg-selapp-beige p-4 rounded-lg border-l-4 border-selapp-brown">
-                <div 
-                  className="text-gray-800 text-lg mb-3 leading-relaxed font-serif italic" 
-                  dangerouslySetInnerHTML={{ __html: searchResult.text }} 
+              <div className="bg-gradient-to-br from-selapp-beige/50 to-white p-6 rounded-2xl border-l-[6px] border-selapp-brown shadow-inner">
+                <div
+                  className="text-selapp-brown-dark text-lg mb-4 leading-relaxed font-serif italic"
+                  dangerouslySetInnerHTML={{ __html: searchResult.text }}
                 />
-                <div className="pt-3 border-t border-selapp-brown/20">
-                  <p className="font-bold text-selapp-brown">{searchResult.reference}</p>
-                  {searchResult.tema && (
-                    <p className="text-sm text-selapp-brown-light">Tema: {searchResult.tema}</p>
-                  )}
+                <div className="pt-4 border-t border-selapp-brown/10 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-selapp-brown mb-1">{searchResult.reference}</p>
+                    {searchResult.tema && (
+                      <span className="text-xs bg-selapp-brown/10 text-selapp-brown px-3 py-1 rounded-full font-medium">
+                        {searchResult.tema}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-400 py-8">
-                <div className="text-5xl mb-2">📖</div>
-                <p className="text-sm">Ingresa una referencia y haz clic en buscar</p>
+              <div className="text-center text-selapp-brown/30 py-12 border-2 border-dashed border-selapp-beige-dark rounded-2xl">
+                <BookOpen size={56} className="mx-auto mb-4 opacity-20" strokeWidth={1} />
+                <p className="text-sm font-medium">Ingresa una referencia y haz clic en buscar</p>
               </div>
             )}
           </div>
 
           {/* SECCIÓN 2: Versículo Aleatorio */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🎲</span>
-              <h2 className="text-2xl font-bold text-selapp-brown">Versículo Aleatorio</h2>
+          <div className="selapp-card p-8 h-fit">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-selapp-accent/10 rounded-2xl flex items-center justify-center text-selapp-accent">
+                <Sparkles size={28} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-bold text-selapp-brown">Versículo Aleatorio</h2>
+                <p className="text-sm text-selapp-brown-light">Descubre una sorpresa de la Biblia</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Descubre un versículo sorpresa de la Biblia
-            </p>
 
             {/* Selector de versión para aleatorio */}
-            <div className="mb-4">
-              <label htmlFor="random-version" className="block text-sm font-medium text-gray-700 mb-2">
-                Versión
+            <div className="mb-5">
+              <label htmlFor="random-version" className="block text-sm font-bold text-selapp-brown mb-2 uppercase tracking-wide">
+                Versión Bíblica
               </label>
-              <select 
+              <select
                 id="random-version"
-                value={randomVersion} 
-                onChange={(e) => handleRandomVersionChange(e.target.value)} 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-selapp-brown"
+                value={randomVersion}
+                onChange={(e) => handleRandomVersionChange(e.target.value)}
+                className="selapp-input w-full"
               >
                 {bibleVersions.map(v => (
                   <option key={v.code} value={v.code}>{v.name}</option>
                 ))}
               </select>
               {randomResult && currentRandomInfo && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Cambiar la versión mantendrá el mismo versículo
+                <p className="text-xs text-selapp-brown-light mt-2 flex items-center gap-1">
+                  <Lightbulb size={12} />
+                  Cambiar la versión mantendrá el mismo versículo
                 </p>
               )}
             </div>
@@ -261,39 +282,44 @@ export default function VerseSearchPage() {
             <button
               onClick={() => fetchRandomVerse()}
               disabled={loadingRandom}
-              className="w-full bg-selapp-accent hover:bg-selapp-accent-dark text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-3 mb-4 shadow-md"
+              className="w-full bg-gradient-to-r from-selapp-accent to-selapp-accent-light hover:from-selapp-accent-dark hover:to-selapp-accent text-white font-bold py-4 px-6 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               {loadingRandom ? (
                 <>
-                  <span className="animate-spin text-xl">⏳</span>
+                  <Loader2 size={20} className="animate-spin" />
                   <span>Cargando...</span>
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🔄</span>
+                  <Sparkles size={20} />
                   <span>Generar Versículo</span>
+                  <ArrowRight size={20} />
                 </>
               )}
             </button>
 
             {/* Resultado aleatorio */}
             {randomResult ? (
-              <div className="bg-selapp-beige p-4 rounded-lg border-l-4 border-selapp-accent">
-                <div 
-                  className="text-gray-800 text-lg mb-3 leading-relaxed font-serif italic" 
-                  dangerouslySetInnerHTML={{ __html: randomResult.text }} 
+              <div className="bg-gradient-to-br from-selapp-accent/5 to-selapp-beige/50 p-6 rounded-2xl border-l-[6px] border-selapp-accent shadow-inner">
+                <div
+                  className="text-selapp-brown-dark text-lg mb-4 leading-relaxed font-serif italic"
+                  dangerouslySetInnerHTML={{ __html: randomResult.text }}
                 />
-                <div className="pt-3 border-t border-selapp-accent/20">
-                  <p className="font-bold text-selapp-brown">{randomResult.reference}</p>
-                  {randomResult.tema && (
-                    <p className="text-sm text-selapp-brown-light">Tema: {randomResult.tema}</p>
-                  )}
+                <div className="pt-4 border-t border-selapp-accent/10 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-selapp-brown mb-1">{randomResult.reference}</p>
+                    {randomResult.tema && (
+                      <span className="text-xs bg-selapp-accent/10 text-selapp-accent px-3 py-1 rounded-full font-medium">
+                        {randomResult.tema}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-400 py-8">
-                <div className="text-5xl mb-2">✨</div>
-                <p className="text-sm">Haz clic en el botón para descubrir un versículo</p>
+              <div className="text-center text-selapp-brown/30 py-12 border-2 border-dashed border-selapp-beige-dark rounded-2xl">
+                <Sparkles size={56} className="mx-auto mb-4 opacity-20" strokeWidth={1} />
+                <p className="text-sm font-medium">Haz clic en el botón para descubrir un versículo</p>
               </div>
             )}
           </div>

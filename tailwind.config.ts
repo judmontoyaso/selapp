@@ -13,13 +13,15 @@ const config: Config = {
         foreground: "var(--foreground)",
         // Colores del logo Selapp
         selapp: {
-          brown: "#6B4E3D",
-          "brown-dark": "#4A3429",
-          "brown-light": "#8B6F5C",
-          beige: "#FAF5EB",
-          "beige-dark": "#F0E6D7",
-          cream: "#FFF9F0",
-          accent: "#D4A574",
+          brown: "#4A403A",      // Darker, richer coffee (Primary Text/Bg)
+          "brown-dark": "#2C2420", // Almost black brown
+          "brown-light": "#8C7E74", // Muted taupe
+          beige: "#F9F7F2",      // Alabaster (Main Bg)
+          "beige-dark": "#EBE5DA", // Darker beige for borders
+          cream: "#FFFFFF",      // White (Card Bg)
+          accent: "#C5A880",     // Muted Gold (Buttons/Highlights)
+          "accent-light": "#E5D4BC", // Light gold
+          success: "#8B9D77",    // Sage Green
         },
       },
     },

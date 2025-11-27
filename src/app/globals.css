@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAF5EB;
-  --foreground: #4A3429;
+  --background: #F9F7F2;
+  --foreground: #4A403A;
 }
 
 body {
@@ -24,19 +24,19 @@ body {
 
 /* Estilos personalizados para Selapp */
 .selapp-card {
-  @apply bg-white rounded-2xl shadow-lg border border-selapp-beige-dark transition-all duration-300;
+  @apply bg-white rounded-3xl shadow-sm border border-selapp-beige-dark/50 transition-all duration-300;
 }
 
 .selapp-card:hover {
-  @apply shadow-xl transform -translate-y-1;
+  @apply shadow-xl transform -translate-y-1 border-selapp-accent/30;
 }
 
 .selapp-button {
-  @apply bg-selapp-brown hover:bg-selapp-brown-dark text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg;
+  @apply bg-selapp-brown hover:bg-selapp-brown-dark text-white font-medium px-8 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
 }
 
 .selapp-input {
-  @apply border-2 border-selapp-beige-dark rounded-xl px-4 py-3 focus:outline-none focus:border-selapp-brown focus:ring-2 focus:ring-selapp-brown/20 transition-all;
+  @apply bg-white border border-selapp-beige-dark rounded-2xl px-5 py-4 focus:outline-none focus:border-selapp-accent focus:ring-4 focus:ring-selapp-accent/10 transition-all placeholder:text-selapp-brown-light/50;
 }
 
 /* Estilos para contenido con formato (prose) */
@@ -150,4 +150,32 @@ body {
   @apply mb-2;
 }
 
+
 /* Estilos para contenido de la Biblia - ahora usa scripture-styles completo */
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: theme('colors.selapp.brown-light');
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.selapp.brown');
+}
+
+/* Typography utilities */
+.font-serif {
+  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
+}
+
+.font-sans {
+  font-family: var(--font-lato), 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
