@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { sendPushNotification } from "@/lib/webpush";
+import { sendPushNotification, sendPushToAll } from "@/lib/webpush";
 
 interface CreateNotificationParams {
   userId: string;
@@ -71,6 +71,19 @@ export async function notifyVerseOfTheDay() {
       data: notifications,
     });
 
+    // Enviar push a todos
+    try {
+      await sendPushToAll({
+        title: "📖 Nuevo Versículo del Día",
+        message: "Ya está disponible el versículo del día. ¡No te lo pierdas!",
+        icon: "📖",
+        link: "/",
+        tag: "verse_of_day",
+      });
+    } catch (pushError) {
+      console.error("Error enviando push masivo:", pushError);
+    }
+
     console.log(`✅ Notificaciones del versículo del día enviadas a ${users.length} usuarios`);
   } catch (error) {
     console.error("Error sending verse of the day notifications:", error);
@@ -118,6 +131,19 @@ export async function notifyReadingReminder() {
       await prisma.notification.createMany({
         data: notifications,
       });
+
+      // Enviar push individualmente (porque no es a todos)
+      await Promise.allSettled(
+        usersToNotify.map(userId =>
+          sendPushNotification(userId, {
+            title: "📚 Recordatorio de Lectura",
+            message: "Aún no has registrado tu lectura bíblica de hoy. ¡Tómate un momento para leer!",
+            icon: "📚",
+            link: "/",
+            tag: "reading_reminder",
+          })
+        )
+      );
 
       console.log(`✅ Recordatorios de lectura enviados a ${usersToNotify.length} usuarios`);
     }
@@ -167,6 +193,19 @@ export async function notifyDiaryReminder() {
       await prisma.notification.createMany({
         data: notifications,
       });
+
+      // Enviar push individualmente
+      await Promise.allSettled(
+        usersToNotify.map(userId =>
+          sendPushNotification(userId, {
+            title: "✍️ ¿Cómo estuvo tu día?",
+            message: "Tómate un momento para escribir en tu diario espiritual. Reflexiona sobre tu día.",
+            icon: "✍️",
+            link: "/notes",
+            tag: "diary_reminder",
+          })
+        )
+      );
 
       console.log(`✅ Recordatorios de diario enviados a ${usersToNotify.length} usuarios`);
     }
