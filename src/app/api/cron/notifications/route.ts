@@ -4,6 +4,7 @@ import {
   notifyReadingReminder,
   notifyDiaryReminder,
   checkAndNotifyStreaks,
+  notifyDevotionalMorning,
 } from "@/lib/notifications";
 
 // Este endpoint debe ser protegido con una API key en producción
@@ -23,11 +24,21 @@ export async function GET(request: Request) {
 
     switch (task) {
       case "generate-devotional":
-        // Los devocionales se generan desde n8n
-        return NextResponse.json({ 
-          success: true, 
-          message: "Devocionales se generan automáticamente desde n8n" 
+        // Deprecated or handled by n8n
+        return NextResponse.json({
+          success: true,
+          message: "Tarea generate-devotional es un placeholder (n8n maneja la generación)"
         });
+
+      case "devotional-morning":
+        await notifyDevotionalMorning();
+        return NextResponse.json({ success: true, message: "Notificación de devocional matutino enviada" });
+
+      case "night-reminders":
+        await notifyReadingReminder();
+        await notifyDiaryReminder();
+        await checkAndNotifyStreaks();
+        return NextResponse.json({ success: true, message: "Recordatorios nocturnos enviados" });
 
       case "verse-of-day":
         await notifyVerseOfTheDay();
@@ -46,8 +57,8 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, message: "Verificación de rachas completada" });
 
       case "all":
-        // Ejecutar todas las tareas (excepto generate-devotional que maneja n8n)
-        await notifyVerseOfTheDay();
+        // Ejecutar todas las tareas para testing
+        await notifyDevotionalMorning();
         await notifyReadingReminder();
         await notifyDiaryReminder();
         await checkAndNotifyStreaks();
@@ -55,9 +66,9 @@ export async function GET(request: Request) {
 
       default:
         return NextResponse.json(
-          { 
-            error: "Tarea no especificada",
-            availableTasks: ["generate-devotional", "verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
+          {
+            error: "Tarea no especificada o inválida",
+            availableTasks: ["devotional-morning", "night-reminders", "verse-of-day", "reading-reminder", "diary-reminder", "check-streaks", "all"]
           },
           { status: 400 }
         );
