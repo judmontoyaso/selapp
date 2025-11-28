@@ -328,17 +328,21 @@ export async function notifyDevotionalMorning() {
       select: { id: true },
     });
 
+    const title = verseOfTheDay
+      ? `📖 ${verseOfTheDay.reference}`
+      : "Buenos días ☀️";
+
     const message = verseOfTheDay
-      ? `Tu versículo de hoy es ${verseOfTheDay.reference}. ¡Comienza tu día con Dios!`
+      ? `"${verseOfTheDay.text}"\n\n✨ Te invitamos a hacer tu devocional de hoy.`
       : "Tu devocional del día está listo. ¡Comienza tu día con Dios!";
 
     const notifications = users.map((user) => ({
       userId: user.id,
-      type: "verse_of_day" as const, // Reutilizamos este tipo o creamos uno nuevo si es necesario
-      title: "Buenos días ☀️",
+      type: "verse_of_day" as const,
+      title: title,
       message: message,
       icon: "☀️",
-      link: "/devotional", // Asumiendo que esta es la ruta
+      link: "/devotional",
     }));
 
     await prisma.notification.createMany({
@@ -348,7 +352,7 @@ export async function notifyDevotionalMorning() {
     // Enviar push a todos
     try {
       await sendPushToAll({
-        title: "Buenos días ☀️",
+        title: title,
         message: message,
         icon: "☀️",
         link: "/devotional",

@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/notifications?task=devotional-morning",
-      "schedule": "40 14 * * *"
+      "schedule": "30 10 * * *"
     },
     {
       "path": "/api/cron/notifications?task=night-reminders",
