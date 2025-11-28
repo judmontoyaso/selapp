@@ -308,3 +308,58 @@ export async function checkAndNotifyStreaks() {
     console.error("Error checking streaks:", error);
   }
 }
+
+/**
+ * Notificación de devocional matutino (5:30 AM)
+ */
+export async function notifyDevotionalMorning() {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Buscar el versículo del día de hoy
+    const verseOfTheDay = await prisma.verseOfTheDay.findFirst({
+      where: {
+        date: today,
+      },
+    });
+
+    const users = await prisma.user.findMany({
+      select: { id: true },
+    });
+
+    const message = verseOfTheDay
+      ? `Tu versículo de hoy es ${verseOfTheDay.reference}. ¡Comienza tu día con Dios!`
+      : "Tu devocional del día está listo. ¡Comienza tu día con Dios!";
+
+    const notifications = users.map((user) => ({
+      userId: user.id,
+      type: "verse_of_day" as const, // Reutilizamos este tipo o creamos uno nuevo si es necesario
+      title: "Buenos días ☀️",
+      message: message,
+      icon: "☀️",
+      link: "/devotional", // Asumiendo que esta es la ruta
+    }));
+
+    await prisma.notification.createMany({
+      data: notifications,
+    });
+
+    // Enviar push a todos
+    try {
+      await sendPushToAll({
+        title: "Buenos días ☀️",
+        message: message,
+        icon: "☀️",
+        link: "/devotional",
+        tag: "devotional_morning",
+      });
+    } catch (pushError) {
+      console.error("Error enviando push masivo de devocional:", pushError);
+    }
+
+    console.log(`✅ Notificaciones de devocional matutino enviadas a ${users.length} usuarios`);
+  } catch (error) {
+    console.error("Error sending morning devotional notifications:", error);
+  }
+}
