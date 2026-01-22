@@ -86,9 +86,17 @@ export default function SignInPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-selapp-brown mb-2">
-                Contraseña
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-selapp-brown">
+                  Contraseña
+                </label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-selapp-brown hover:text-selapp-brown-dark font-medium"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"
