@@ -53,6 +53,8 @@ export async function GET() {
 
 // POST: Crear nuevo sermón
 export async function POST(request: Request) {
+  let bodyData: any = null;
+  
   try {
     const session = await getServerSession(authOptions);
     
@@ -76,6 +78,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    bodyData = body; // Guardar para usar en catch si es necesario
     const { title, pastor, date, id } = body;
 
     if (!title || !pastor) {
@@ -103,8 +106,8 @@ export async function POST(request: Request) {
        // If it already exists, return the existing one or success to ensure idempotency
        // For simplicity, we'll fetch and return it, or just return success.
        // Ideally we fetch it to return the same shape.
-       if (body.id) {
-         const existing = await prisma.sermons.findUnique({ where: { id: body.id } });
+       if (bodyData?.id) {
+         const existing = await prisma.sermons.findUnique({ where: { id: bodyData.id } });
          if (existing) return NextResponse.json(existing);
        }
     }
