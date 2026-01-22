@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, pastor, date } = body;
+    const { title, pastor, date, id } = body;
 
     if (!title || !pastor) {
       return NextResponse.json(
@@ -87,6 +87,7 @@ export async function POST(request: Request) {
 
     const sermon = await prisma.sermons.create({
       data: {
+        ...(id && { id }), // Use client ID if provided
         title,
         pastor,
         date: date ? new Date(date) : new Date(),
@@ -97,6 +98,16 @@ export async function POST(request: Request) {
     return NextResponse.json(sermon);
   } catch (error) {
     console.error("Error creating sermon:", error);
+    // Check for unique constraint violation (if ID already exists)
+    if ((error as any).code === 'P2002') {
+       // If it already exists, return the existing one or success to ensure idempotency
+       // For simplicity, we'll fetch and return it, or just return success.
+       // Ideally we fetch it to return the same shape.
+       if (body.id) {
+         const existing = await prisma.sermons.findUnique({ where: { id: body.id } });
+         if (existing) return NextResponse.json(existing);
+       }
+    }
     return NextResponse.json(
       { error: "Error al crear sermón" },
       { status: 500 }
