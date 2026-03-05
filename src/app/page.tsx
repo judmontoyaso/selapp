@@ -6,6 +6,7 @@ import Image from "next/image";
 import AuthButtons from "@/components/AuthButtons";
 import DailyReadingTracker from "@/components/DailyReadingTracker";
 import VerseOfTheDay from "@/components/VerseOfTheDay";
+import { FiBookOpen, FiActivity, FiHeart, FiSearch } from "react-icons/fi";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -48,17 +49,17 @@ export default function Home() {
               Tu Compañero Espiritual Digital
             </h1>
             <p className="text-xl md:text-2xl text-selapp-brown-light mb-8 max-w-3xl mx-auto">
-              Organiza tus sermones, crece en tu lectura diaria de la Biblia, 
+              Organiza tus sermones, crece en tu lectura diaria de la Biblia,
               y mantén un registro de tu caminar espiritual
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
+              <Link
                 href="/auth/signup"
                 className="px-8 py-4 bg-selapp-accent text-white rounded-lg font-semibold text-lg hover:bg-selapp-accent-dark transition-colors shadow-lg"
               >
                 Comenzar Ahora
               </Link>
-              <Link 
+              <Link
                 href="/auth/signin"
                 className="px-8 py-4 bg-white text-selapp-brown rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg border-2 border-selapp-brown"
               >
@@ -70,44 +71,44 @@ export default function Home() {
           {/* Features Grid */}
           <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8 mb-16">
             {/* Feature 1 */}
-            <div className="selapp-card p-8 text-center">
-              <div className="text-6xl mb-4">📖</div>
+            <div className="selapp-card p-8 text-center flex flex-col items-center">
+              <FiBookOpen className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
                 Sermones Organizados
               </h3>
               <p className="text-selapp-brown-light">
-                Guarda tus notas de predicación con una interfaz tipo chat. 
+                Guarda tus notas de predicación con una interfaz tipo chat.
                 Adjunta imágenes, organiza por temas y accede desde cualquier dispositivo.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="selapp-card p-8 text-center">
-              <div className="text-6xl mb-4">🌱</div>
+            <div className="selapp-card p-8 text-center flex flex-col items-center">
+              <FiActivity className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
                 Lectura Diaria
               </h3>
               <p className="text-selapp-brown-light">
-                Rastrea tu progreso de lectura bíblica diaria. Gana semillas, 
+                Rastrea tu progreso de lectura bíblica diaria. Gana semillas,
                 sube de nivel y mantén rachas de días consecutivos leyendo.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="selapp-card p-8 text-center">
-              <div className="text-6xl mb-4">🙏</div>
+            <div className="selapp-card p-8 text-center flex flex-col items-center">
+              <FiHeart className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
                 Devocionales
               </h3>
               <p className="text-selapp-brown-light">
-                Recibe devocionales diarios con versículos bíblicos y preguntas 
+                Recibe devocionales diarios con versículos bíblicos y preguntas
                 de reflexión. Notificaciones push para no perderte ninguno.
               </p>
             </div>
 
             {/* Feature 4 - Buscar Versículos */}
-            <div className="selapp-card p-8 text-center">
-              <div className="text-6xl mb-4">🔎</div>
+            <div className="selapp-card p-8 text-center flex flex-col items-center">
+              <FiSearch className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
                 Buscar Versículos
               </h3>
@@ -162,7 +163,7 @@ export default function Home() {
             <p className="text-lg text-selapp-brown-light mb-8">
               Únete a una comunidad de personas comprometidas con su crecimiento espiritual
             </p>
-            <Link 
+            <Link
               href="/auth/signup"
               className="inline-block px-10 py-5 bg-selapp-accent text-white rounded-lg font-semibold text-xl hover:bg-selapp-accent-dark transition-colors shadow-xl"
             >
@@ -199,7 +200,7 @@ export default function Home() {
 
       {/* Contenedor principal */}
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        
+
         {/* Saludo personalizado - más sutil */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-light text-selapp-brown mb-2">
@@ -214,11 +215,11 @@ export default function Home() {
 
         {/* Grid principal - 2 columnas en desktop */}
         <div className="grid lg:grid-cols-3 gap-8">
-          
+
           {/* Columna izquierda - Versículo del Día (más destacado) */}
           <div className="lg:col-span-2 space-y-8">
             <VerseOfTheDay />
-            
+
             {/* Tracker de lectura diaria */}
             <DailyReadingTracker />
           </div>
@@ -228,12 +229,14 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-selapp-brown mb-4 text-center lg:text-left">
               Acciones Rápidas
             </h2>
-            
+
             {/* Card de Sermones - Compacto */}
             <Link href="/sermons" className="block">
               <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
                 <div className="flex items-start gap-4">
-                  <div className="text-4xl flex-shrink-0">📖</div>
+                  <div className="flex-shrink-0 mt-1">
+                    <FiBookOpen className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
                       Sermones
@@ -260,7 +263,9 @@ export default function Home() {
             <Link href="/devotionals" className="block">
               <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
                 <div className="flex items-start gap-4">
-                  <div className="text-4xl flex-shrink-0">🙏</div>
+                  <div className="flex-shrink-0 mt-1">
+                    <FiHeart className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
                       Devocionales
@@ -287,7 +292,9 @@ export default function Home() {
             <Link href="/verse-search" className="block">
               <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
                 <div className="flex items-start gap-4">
-                  <div className="text-4xl flex-shrink-0">🔎</div>
+                  <div className="flex-shrink-0 mt-1">
+                    <FiSearch className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
                       Buscar Versículos

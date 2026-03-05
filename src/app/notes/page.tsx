@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FiBookOpen, FiSmile, FiHeart, FiTarget, FiEdit, FiSave, FiX } from "react-icons/fi";
 
 interface DiaryEntry {
   id: string;
@@ -25,11 +26,11 @@ const moodEmojis = [
 ];
 
 const thoughtTypes = [
-  { type: 'gratitude' as const, icon: '🙏', label: 'Agradecer', placeholder: 'Hoy agradezco por...' },
-  { type: 'mood' as const, icon: '💭', label: 'Cómo me siento', placeholder: '' },
-  { type: 'thoughts' as const, icon: '💡', label: 'Qué pienso', placeholder: 'He estado pensando en...' },
-  { type: 'achievements' as const, icon: '🎯', label: 'Qué logré', placeholder: 'Hoy aprendí / logré...' },
-  { type: 'freeNote' as const, icon: '📝', label: 'Nota libre', placeholder: 'Escribe lo que quieras...' },
+  { type: 'gratitude' as const, icon: <FiHeart className="w-8 h-8 text-selapp-accent" />, minIcon: <FiHeart className="w-5 h-5" />, label: 'Agradecer', placeholder: 'Hoy agradezco por...' },
+  { type: 'mood' as const, icon: <FiSmile className="w-8 h-8 text-selapp-accent" />, minIcon: <FiSmile className="w-5 h-5" />, label: 'Cómo me siento', placeholder: '' },
+  { type: 'thoughts' as const, icon: <FiBookOpen className="w-8 h-8 text-selapp-accent" />, minIcon: <FiBookOpen className="w-5 h-5" />, label: 'Qué pienso', placeholder: 'He estado pensando en...' },
+  { type: 'achievements' as const, icon: <FiTarget className="w-8 h-8 text-selapp-accent" />, minIcon: <FiTarget className="w-5 h-5" />, label: 'Qué logré', placeholder: 'Hoy aprendí / logré...' },
+  { type: 'freeNote' as const, icon: <FiEdit className="w-8 h-8 text-selapp-accent" />, minIcon: <FiEdit className="w-5 h-5" />, label: 'Nota libre', placeholder: 'Escribe lo que quieras...' },
 ];
 
 export default function DiaryPage() {
@@ -71,9 +72,9 @@ export default function DiaryPage() {
 
   const saveThought = async () => {
     if (!activeSection) return;
-    
+
     const today = new Date().toISOString().split("T")[0];
-    
+
     let payload: any = {
       date: today,
     };
@@ -160,46 +161,58 @@ export default function DiaryPage() {
 
         {loading ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <span className="text-2xl animate-spin inline-block">⏳</span>
+            <span className="text-4xl animate-spin inline-block text-selapp-brown/50">⏳</span>
             <p className="text-selapp-brown-light mt-4">Cargando...</p>
           </div>
         ) : (
           <>
             {todayEntry && (
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6 space-y-4">
-                <h2 className="text-xl font-bold text-selapp-brown mb-4">📋 Registrado hoy</h2>
-                
+                <h2 className="text-xl font-bold text-selapp-brown mb-4 flex items-center gap-2">
+                  <FiBookOpen className="w-5 h-5 text-selapp-accent" /> Registrado hoy
+                </h2>
+
                 {todayEntry.gratitude && (
                   <div className="border-l-4 border-selapp-accent pl-4 py-2">
-                    <p className="text-sm text-selapp-brown/60 font-semibold">🙏 Agradecimiento</p>
+                    <p className="text-sm text-selapp-brown/60 font-semibold flex items-center gap-2 mb-1">
+                      <FiHeart className="w-4 h-4" /> Agradecimiento
+                    </p>
                     <p className="text-selapp-brown">{todayEntry.gratitude}</p>
                   </div>
                 )}
-                
+
                 {todayEntry.mood && (
                   <div className="border-l-4 border-selapp-accent pl-4 py-2">
-                    <p className="text-sm text-selapp-brown/60 font-semibold">💭 Estado de ánimo</p>
+                    <p className="text-sm text-selapp-brown/60 font-semibold flex items-center gap-2 mb-1">
+                      <FiSmile className="w-4 h-4" /> Estado de ánimo
+                    </p>
                     <p className="text-3xl">{todayEntry.mood}</p>
                   </div>
                 )}
-                
+
                 {todayEntry.thoughts && (
                   <div className="border-l-4 border-selapp-accent pl-4 py-2">
-                    <p className="text-sm text-selapp-brown/60 font-semibold">💡 Pensamientos</p>
+                    <p className="text-sm text-selapp-brown/60 font-semibold flex items-center gap-2 mb-1">
+                      <FiBookOpen className="w-4 h-4" /> Pensamientos
+                    </p>
                     <p className="text-selapp-brown">{todayEntry.thoughts}</p>
                   </div>
                 )}
-                
+
                 {todayEntry.achievements && (
                   <div className="border-l-4 border-selapp-accent pl-4 py-2">
-                    <p className="text-sm text-selapp-brown/60 font-semibold">🎯 Logros</p>
+                    <p className="text-sm text-selapp-brown/60 font-semibold flex items-center gap-2 mb-1">
+                      <FiTarget className="w-4 h-4" /> Logros
+                    </p>
                     <p className="text-selapp-brown">{todayEntry.achievements}</p>
                   </div>
                 )}
-                
+
                 {todayEntry.freeNote && (
                   <div className="border-l-4 border-selapp-accent pl-4 py-2">
-                    <p className="text-sm text-selapp-brown/60 font-semibold">📝 Nota libre</p>
+                    <p className="text-sm text-selapp-brown/60 font-semibold flex items-center gap-2 mb-1">
+                      <FiEdit className="w-4 h-4" /> Nota libre
+                    </p>
                     <p className="text-selapp-brown">{todayEntry.freeNote}</p>
                   </div>
                 )}
@@ -215,7 +228,9 @@ export default function DiaryPage() {
                     onClick={() => openSection(type.type)}
                     className="w-full bg-white hover:bg-selapp-beige/30 rounded-xl shadow-sm p-6 transition-all text-left flex items-center gap-4"
                   >
-                    <span className="text-4xl">{type.icon}</span>
+                    <div className="flex-shrink-0 flex items-center justify-center p-3 bg-selapp-beige/30 rounded-full">
+                      {type.icon}
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-selapp-brown">{type.label}</h3>
                       <p className="text-sm text-selapp-brown/60">{type.placeholder}</p>
@@ -228,15 +243,15 @@ export default function DiaryPage() {
             {activeSection && (
               <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-selapp-brown">
-                    {thoughtTypes.find(t => t.type === activeSection)?.icon}{' '}
-                    {thoughtTypes.find(t => t.type === activeSection)?.label}
+                  <h2 className="text-xl font-bold text-selapp-brown flex items-center gap-3">
+                    {thoughtTypes.find(t => t.type === activeSection)?.icon}
+                    <span>{thoughtTypes.find(t => t.type === activeSection)?.label}</span>
                   </h2>
                   <button
                     onClick={closeSection}
-                    className="text-selapp-brown/60 hover:text-selapp-brown text-2xl"
+                    className="text-selapp-brown/60 hover:text-selapp-brown p-2 rounded-full hover:bg-selapp-beige/50 transition-colors"
                   >
-                    ✕
+                    <FiX className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -246,11 +261,10 @@ export default function DiaryPage() {
                       <button
                         key={m.score}
                         onClick={() => setSelectedMood({ emoji: m.emoji, score: m.score })}
-                        className={`flex flex-col items-center p-4 rounded-lg transition-all ${
-                          selectedMood?.score === m.score
+                        className={`flex flex-col items-center p-4 rounded-lg transition-all ${selectedMood?.score === m.score
                             ? "bg-selapp-accent text-white shadow-md scale-110"
                             : "bg-selapp-beige/30 hover:bg-selapp-beige/50"
-                        }`}
+                          }`}
                       >
                         <span className="text-4xl mb-2">{m.emoji}</span>
                         <span className="text-xs">{m.label}</span>
@@ -277,9 +291,9 @@ export default function DiaryPage() {
                   </button>
                   <button
                     onClick={saveThought}
-                    className="flex-1 bg-selapp-accent hover:bg-selapp-accent-dark text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-md hover:shadow-lg"
+                    className="flex-1 bg-selapp-accent hover:bg-selapp-accent-dark text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    💾 Guardar
+                    <FiSave className="w-5 h-5" /> Guardar
                   </button>
                 </div>
               </div>

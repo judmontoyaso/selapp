@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import RichTextEditor from "@/components/RichTextEditor";
+import { FiMessageSquare, FiFileText, FiEdit2, FiTrash2, FiCheck, FiArrowLeft, FiEdit3, FiX, FiPlus } from "react-icons/fi";
 
 interface Image {
   id: string;
@@ -194,7 +195,7 @@ export default function SermonChatPage() {
 
     const newText =
       currentText.substring(0, start) + formattedText + currentText.substring(end);
-    
+
     if (isEditing) {
       setEditingContent(newText);
     } else {
@@ -224,12 +225,12 @@ export default function SermonChatPage() {
       .replace(/^\s*> (.+)$/gm, '<blockquote class="border-l-4 border-selapp-accent pl-4 italic my-3 text-selapp-brown-light bg-selapp-beige/30 py-2 rounded-r">$1</blockquote>')
       // Lista (permite espacios antes)
       .replace(/^\s*• (.+)$/gm, '<li class="ml-6 my-1">$1</li>');
-    
+
     // Envolver listas consecutivas en <ul>
     formatted = formatted.replace(/(<li class="ml-6 my-1">.*?<\/li>\n?)+/g, '<ul class="list-disc my-2">$&</ul>');
     // Convertir saltos de línea que no están dentro de tags
     formatted = formatted.replace(/\n(?![^<]*>)/g, '<br />');
-    
+
     return formatted;
   };
 
@@ -358,103 +359,118 @@ export default function SermonChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-selapp-beige via-selapp-cream to-white">
+    <div className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-selapp-brown to-selapp-brown-dark text-white shadow-lg">
-        <div className="container mx-auto max-w-4xl px-4 py-4 flex items-center gap-4">
-          <Link
-            href="/sermons"
-            className="hover:bg-white/10 p-2 rounded-lg transition-all"
-          >
-            <span className="text-xl">←</span>
-          </Link>
-          <Image
-            src="/icon-192x192.png"
-            alt="Selapp"
-            width={40}
-            height={40}
-            className="rounded-lg"
-          />
-          <div className="flex-1">
-            {editingSermon ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-3 py-1 rounded-lg text-selapp-brown font-bold text-lg"
-                  placeholder="Título del sermón"
-                />
-                <input
-                  type="text"
-                  value={editPastor}
-                  onChange={(e) => setEditPastor(e.target.value)}
-                  className="w-full px-3 py-1 rounded-lg text-selapp-brown text-sm"
-                  placeholder="Nombre del pastor"
-                />
-              </div>
-            ) : (
-              <>
-                <h1 className="text-xl font-bold">{sermon.title}</h1>
-                <p className="text-sm text-selapp-beige-dark">
-                  Pastor: {sermon.pastor} • {formatDate(sermon.date)}
-                </p>
-              </>
+      <div className="bg-gradient-to-br from-selapp-brown via-selapp-brown to-selapp-brown-dark text-white rounded-b-3xl shadow-lg mb-6">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 pt-4 pb-3 flex flex-col gap-3">
+
+          {/* Fila Principal: Volver + Título + Botón Nueva Nota */}
+          <div className="flex items-center gap-3 w-full">
+
+            {/* Botón volver */}
+            <Link
+              href="/sermons"
+              className="bg-white/10 hover:bg-white/20 p-2.5 rounded-xl transition-all flex items-center justify-center flex-shrink-0 border border-white/10"
+              title="Volver a mis Sermones"
+            >
+              <FiArrowLeft className="w-5 h-5" />
+            </Link>
+
+            {/* Título e Info del Sermón */}
+            <div className="flex-1 min-w-0">
+              {editingSermon ? (
+                <div className="flex flex-col sm:flex-row w-full gap-2">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl text-selapp-brown font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 shadow-inner"
+                    placeholder="Título del sermón"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={editPastor}
+                    onChange={(e) => setEditPastor(e.target.value)}
+                    className="w-full sm:w-36 px-3 py-2 rounded-xl text-selapp-brown text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 shadow-inner"
+                    placeholder="Pastor"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveSermon} disabled={uploading} className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 px-4 py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm font-semibold disabled:opacity-50 shadow">
+                      <FiCheck className="w-4 h-4" />
+                      <span>Guardar</span>
+                    </button>
+                    <button onClick={() => setEditingSermon(false)} disabled={uploading} className="flex-1 sm:flex-none bg-white/15 hover:bg-white/25 px-4 py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm font-semibold disabled:opacity-50 border border-white/20">
+                      <FiX className="w-4 h-4" />
+                      <span>Cancelar</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-base sm:text-lg font-bold truncate leading-tight" title={sermon.title}>
+                      {sermon.title}
+                    </h1>
+                    <button
+                      onClick={handleEditSermon}
+                      className="text-white/50 hover:text-white p-1 rounded-lg transition-colors flex-shrink-0 hover:bg-white/10"
+                      title="Editar título y pastor"
+                    >
+                      <FiEdit2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-white/60 truncate mt-0.5">
+                    {sermon.pastor} · {formatDate(sermon.date)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Botón Nueva Nota */}
+            {!editingSermon && (
+              <button
+                onClick={() => { setViewMode('chat'); setTimeout(scrollToBottom, 100); }}
+                className="flex-shrink-0 bg-white text-selapp-brown hover:bg-selapp-beige px-3 sm:px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 border border-white/80"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">Nueva Nota</span>
+              </button>
             )}
           </div>
-          
-          {editingSermon ? (
-            <div className="flex gap-2">
+
+          {/* Tabs de Vista */}
+          <div className="flex w-full border-t border-white/10 pt-2.5">
+            <div className="flex w-full bg-black/20 p-1 rounded-xl gap-1 shadow-inner">
               <button
-                onClick={handleSaveSermon}
-                disabled={uploading}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                onClick={() => setViewMode("chat")}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                  viewMode === "chat" ? "bg-white text-selapp-brown shadow-md" : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
               >
-                {uploading ? "Guardando..." : "Guardar"}
+                <FiMessageSquare className="w-4 h-4" />
+                <span>Notas</span>
               </button>
               <button
-                onClick={() => setEditingSermon(false)}
-                disabled={uploading}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                onClick={() => setViewMode("document")}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                  viewMode === "document" ? "bg-white text-selapp-brown shadow-md" : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
               >
-                Cancelar
+                <FiFileText className="w-4 h-4" />
+                <span>Documento</span>
               </button>
             </div>
-          ) : (
-            <button
-              onClick={handleEditSermon}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-            >
-              ✏️ Editar
-            </button>
-          )}
-          
-          {/* Botón para cambiar entre vistas */}
-          <button
-            onClick={() => setViewMode(viewMode === "document" ? "chat" : "document")}
-            className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-          >
-            {viewMode === "document" ? (
-              <>
-                <span>💬</span>
-                <span className="hidden sm:inline">Vista Chat</span>
-              </>
-            ) : (
-              <>
-                <span>📄</span>
-                <span className="hidden sm:inline">Vista Documento</span>
-              </>
-            )}
-          </button>
+          </div>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Messages Area (Flujo Natural Documento sin límite de altura) */}
+      <div className="px-4">
         <div className="container mx-auto max-w-4xl">
           {viewMode === 'document' && sermon.messages.length === 0 ? (
-            <div className="text-center text-selapp-brown-light py-12 selapp-card">
-              <div className="text-6xl mb-4">📝</div>
+            <div className="text-center text-selapp-brown-light py-12 selapp-card flex flex-col items-center">
+              <FiEdit3 className="w-16 h-16 mb-4 text-selapp-brown/30" />
               <p className="text-lg mb-4">No hay notas aún</p>
               <p className="text-sm mb-6">Cambia a vista chat para empezar a escribir</p>
             </div>
@@ -527,7 +543,7 @@ export default function SermonChatPage() {
                           Editando mensaje
                         </span>
                       </div>
-                      
+
                       {/* Rich Text Editor */}
                       <RichTextEditor
                         content={editingContent}
@@ -546,17 +562,18 @@ export default function SermonChatPage() {
                         </button>
                         <button
                           onClick={() => handleDeleteMessage(message.id)}
-                          className="px-4 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-all"
+                          className="px-4 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-all flex items-center justify-center w-12"
                           disabled={uploading}
+                          title="Eliminar mensaje"
                         >
-                          🗑️
+                          <FiTrash2 className="w-5 h-5" />
                         </button>
                         <button
                           onClick={handleSaveEdit}
-                          className="flex-1 px-4 py-2 rounded-lg bg-selapp-brown hover:bg-selapp-brown-dark text-white transition-all shadow-lg"
+                          className="flex-1 px-4 py-2 rounded-lg bg-selapp-brown hover:bg-selapp-brown-dark text-white transition-all shadow-lg flex items-center justify-center gap-2"
                           disabled={uploading || !editingContent.trim()}
                         >
-                          {uploading ? "..." : "✓"}
+                          {uploading ? "..." : <><FiCheck className="w-5 h-5" /> <span>Guardar</span></>}
                         </button>
                       </div>
                     </div>
@@ -567,9 +584,9 @@ export default function SermonChatPage() {
                         {/* Botón editar */}
                         <button
                           onClick={() => handleEdit(message)}
-                          className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-selapp-brown hover:bg-selapp-brown-dark text-white px-2 py-1 rounded-lg text-xs"
+                          className="absolute -left-10 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-selapp-brown hover:bg-selapp-brown-dark text-white p-2 rounded-lg text-xs shadow-md"
                         >
-                          ✏️
+                          <FiEdit2 className="w-3 h-3" />
                         </button>
 
                         {/* Imágenes */}
@@ -610,9 +627,9 @@ export default function SermonChatPage() {
         </div>
       </div>
 
-      {/* Input de nueva nota - SOLO en vista chat */}
+      {/* Input de nueva nota - SOLO en vista chat, Fijo en el fondo de la pestaña del navegador */}
       {viewMode === 'chat' && !editingId && (
-        <div className="p-4 bg-white border-t border-selapp-brown/10">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-selapp-brown/10 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] z-20">
           <div className="container mx-auto max-w-4xl">
             {/* Image Preview */}
             {selectedImages.length > 0 && (
@@ -644,7 +661,7 @@ export default function SermonChatPage() {
                 onChange={handleImageSelect}
                 className="hidden"
               />
-              
+
               {/* Rich Text Editor */}
               <RichTextEditor
                 content={newMessage}

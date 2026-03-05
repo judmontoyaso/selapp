@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <Sidebar />
-          <div className="fixed top-4 right-4 z-50">
+          <div className="hidden sm:block fixed top-4 right-4 z-50">
             <NotificationBell />
           </div>
           <PushNotificationSetup />

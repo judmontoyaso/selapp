@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { FiBookOpen, FiBook, FiEdit3, FiAward, FiBell, FiCheck } from "react-icons/fi";
 
 interface Notification {
   id: string;
@@ -98,17 +99,19 @@ export default function NotificationBell() {
   };
 
   const getIcon = (notification: Notification) => {
-    if (notification.icon) return notification.icon;
+    const iconClass = "w-6 h-6 text-selapp-accent";
 
-    const iconMap: { [key: string]: string } = {
-      verse_of_day: "📖",
-      reading_reminder: "📚",
-      diary_reminder: "✍️",
-      achievement: "🏆",
-      custom: "🔔",
+    // Si la DB guardó un ícono en texto que matchea una lógica anterior, lo ignoramos 
+    // y aplicamos en la lista base:
+    const iconMap: { [key: string]: JSX.Element } = {
+      verse_of_day: <FiBookOpen className={iconClass} />,
+      reading_reminder: <FiBook className={iconClass} />,
+      diary_reminder: <FiEdit3 className={iconClass} />,
+      achievement: <FiAward className={iconClass} />,
+      custom: <FiBell className={iconClass} />,
     };
 
-    return iconMap[notification.type] || "🔔";
+    return iconMap[notification.type] || <FiBell className={iconClass} />;
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -180,17 +183,16 @@ export default function NotificationBell() {
             {/* Notifications List */}
             <div className="overflow-y-auto flex-1">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-selapp-brown/60">
-                  <span className="text-4xl block mb-2">🔔</span>
+                <div className="p-8 text-center text-selapp-brown/60 flex flex-col items-center">
+                  <FiBell className="w-12 h-12 mb-3 text-selapp-brown/30" />
                   <p>No tienes notificaciones</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 border-b border-selapp-brown/10 hover:bg-selapp-beige/20 transition-colors ${
-                      !notification.read ? "bg-selapp-beige/10" : ""
-                    }`}
+                    className={`p-4 border-b border-selapp-brown/10 hover:bg-selapp-beige/20 transition-colors ${!notification.read ? "bg-selapp-beige/10" : ""
+                      }`}
                   >
                     <div className="flex gap-3">
                       {/* Icon */}
@@ -202,21 +204,20 @@ export default function NotificationBell() {
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2 mb-1">
                           <h4
-                            className={`font-semibold text-sm ${
-                              !notification.read
+                            className={`font-semibold text-sm ${!notification.read
                                 ? "text-selapp-brown"
                                 : "text-selapp-brown/70"
-                            }`}
+                              }`}
                           >
                             {notification.title}
                           </h4>
                           {!notification.read && (
                             <button
                               onClick={() => markAsRead(notification.id)}
-                              className="text-selapp-accent hover:text-selapp-accent-dark text-xs flex-shrink-0"
+                              className="text-selapp-accent hover:text-selapp-accent-dark text-xs flex-shrink-0 p-1"
                               title="Marcar como leída"
                             >
-                              ✓
+                              <FiCheck className="w-4 h-4" />
                             </button>
                           )}
                         </div>

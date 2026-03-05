@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FiBookOpen, FiMessageCircle, FiBook } from "react-icons/fi";
 
 interface DevotionalQuestion {
   id: string;
@@ -48,12 +49,12 @@ export default function DevotionalsPage() {
         fetch('/api/devotionals-ai'),
         fetch('/api/verse-of-day')
       ]);
-      
+
       if (devotionalsRes.ok) {
         const data = await devotionalsRes.json();
         setDevotionals(data.devotionals || []);
       }
-      
+
       if (verseRes.ok) {
         const data = await verseRes.json();
         setVerseOfDay(data);
@@ -83,25 +84,25 @@ export default function DevotionalsPage() {
             {verseOfDay && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-3xl font-bold text-selapp-brown dark:text-selapp-beige mb-2">
-                    📖 Versículo del Día
+                  <h2 className="text-3xl font-bold text-selapp-brown dark:text-selapp-beige mb-2 flex items-center justify-center gap-3">
+                    <FiBook className="w-8 h-8 text-selapp-accent" /> Versículo del Día
                   </h2>
                   <p className="text-sm text-selapp-brown-light dark:text-selapp-beige/70">
-                    {new Date(verseOfDay.date).toLocaleDateString('es-ES', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    {new Date(verseOfDay.date).toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
                     })}
                   </p>
                 </div>
 
                 <div className="bg-selapp-beige dark:bg-selapp-brown/20 p-6 rounded-xl border-l-4 border-selapp-brown">
-                  <div 
+                  <div
                     className="text-gray-800 dark:text-gray-200 text-xl mb-4 leading-relaxed italic"
                     dangerouslySetInnerHTML={{ __html: `"${verseOfDay.text}"` }}
                   />
-                  
+
                   <div className="flex items-center justify-between">
                     <p className="text-selapp-brown dark:text-selapp-beige font-bold">
                       {verseOfDay.reference}
@@ -119,8 +120,8 @@ export default function DevotionalsPage() {
             {/* Devocionales */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold mb-4 text-selapp-brown dark:text-selapp-beige">
-                  💭 Devocionales
+                <h1 className="text-4xl font-bold mb-4 text-selapp-brown dark:text-selapp-beige flex items-center justify-center gap-3">
+                  <FiMessageCircle className="w-8 h-8 text-selapp-accent" /> Devocionales
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Reflexiones diarias generadas con IA basadas en la Palabra de Dios
@@ -130,7 +131,7 @@ export default function DevotionalsPage() {
               {devotionals.length > 0 ? (
                 <div className="space-y-6">
                   {devotionals.map((devotional) => (
-                    <Link 
+                    <Link
                       key={devotional.id}
                       href={`/devotionals/${devotional.date.split('T')[0]}`}
                       className="block bg-selapp-beige dark:bg-selapp-brown/20 p-6 rounded-xl border-l-4 border-selapp-brown hover:shadow-lg transition-shadow"
@@ -141,11 +142,11 @@ export default function DevotionalsPage() {
                             {devotional.title}
                           </h2>
                           <p className="text-sm text-selapp-brown-light dark:text-selapp-beige/70">
-                            {new Date(devotional.date).toLocaleDateString('es-ES', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                            {new Date(devotional.date).toLocaleDateString('es-ES', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
                             })}
                           </p>
                         </div>
@@ -153,30 +154,31 @@ export default function DevotionalsPage() {
                           {devotional.theme}
                         </span>
                       </div>
-                      
+
                       <p className="text-selapp-brown dark:text-selapp-beige font-semibold mb-2">
                         {devotional.verseReference}
                       </p>
-                      
+
                       <p className="text-gray-700 dark:text-gray-300 italic mb-4 line-clamp-2">
                         &quot;{devotional.verseText}&quot;
                       </p>
-                      
+
                       {devotional.reflection && (
                         <p className="text-gray-600 dark:text-gray-400 line-clamp-3">
                           {devotional.reflection}
                         </p>
                       )}
-                      
-                      <div className="mt-4 flex items-center text-sm text-selapp-brown dark:text-selapp-beige">
-                        <span>💭 {devotional.questions.length} preguntas de reflexión</span>
+
+                      <div className="mt-4 flex items-center gap-2 text-sm text-selapp-brown dark:text-selapp-beige">
+                        <FiMessageCircle className="w-4 h-4 text-selapp-accent" />
+                        <span>{devotional.questions.length} preguntas de reflexión</span>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                  <span className="text-6xl mb-4 block">📖</span>
+                <div className="text-center text-gray-500 dark:text-gray-400 py-12 flex flex-col items-center">
+                  <FiBookOpen className="w-16 h-16 mb-4 text-selapp-brown/50" />
                   <p className="text-lg mb-4">
                     Aún no hay devocionales generados.
                   </p>
