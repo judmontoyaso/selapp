@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import AuthButtons from "@/components/AuthButtons";
-import DailyReadingTracker from "@/components/DailyReadingTracker";
+import SermonCounter from "@/components/SermonCounter";
 import VerseOfTheDay from "@/components/VerseOfTheDay";
 import { FiBookOpen, FiActivity, FiHeart, FiSearch } from "react-icons/fi";
 
@@ -141,8 +141,8 @@ export default function Home() {
               <div className="flex gap-4">
                 <div className="text-3xl">✓</div>
                 <div>
-                  <h4 className="font-semibold text-selapp-brown mb-2">Gamificación</h4>
-                  <p className="text-selapp-brown-light">Sistema de niveles y recompensas por tu constancia</p>
+                  <h4 className="font-semibold text-selapp-brown mb-2">Comunidad Segura</h4>
+                  <p className="text-selapp-brown-light">Tu crecimiento espiritual apoyado por herramientas sólidas.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -216,12 +216,12 @@ export default function Home() {
         {/* Grid principal - 2 columnas en desktop */}
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* Columna izquierda - Versículo del Día (más destacado) */}
+          {/* Columna izquierda - Versículo del Día y Contador de Sermones */}
           <div className="lg:col-span-2 space-y-8">
             <VerseOfTheDay />
 
-            {/* Tracker de lectura diaria */}
-            <DailyReadingTracker />
+            {/* Contador de sermones guardados */}
+            <SermonCounter />
           </div>
 
           {/* Columna derecha - Acciones rápidas */}

@@ -14,20 +14,20 @@ interface RichTextEditorProps {
   onAttachClick?: () => void;
 }
 
-export default function RichTextEditor({ 
-  content, 
-  onChange, 
+export default function RichTextEditor({
+  content,
+  onChange,
   placeholder = "Escribe tu nota...",
   disabled = false,
   onAttachClick
 }: RichTextEditorProps) {
-  
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [3],
-        },
+          levels: [3]
+        }
       }),
       Underline,
       Placeholder.configure({
@@ -73,11 +73,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('bold')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('bold')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } font-bold disabled:opacity-50`}
+            } font-bold disabled:opacity-50`}
           title="Negrita"
         >
           B
@@ -86,11 +85,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('italic')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('italic')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } italic disabled:opacity-50`}
+            } italic disabled:opacity-50`}
           title="Cursiva"
         >
           I
@@ -99,11 +97,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('underline')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('underline')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } underline disabled:opacity-50`}
+            } underline disabled:opacity-50`}
           title="Subrayado"
         >
           U
@@ -112,11 +109,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('heading')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('heading')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } font-bold disabled:opacity-50`}
+            } font-bold disabled:opacity-50`}
           title="Título"
         >
           H
@@ -125,11 +121,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('blockquote')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('blockquote')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } disabled:opacity-50`}
+            } disabled:opacity-50`}
           title="Cita"
         >
           &quot;
@@ -138,11 +133,10 @@ export default function RichTextEditor({
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={disabled}
-          className={`px-3 py-1.5 rounded-lg transition-all ${
-            editor.isActive('bulletList')
+          className={`px-3 py-1.5 rounded-lg transition-all ${editor.isActive('bulletList')
               ? 'bg-selapp-brown text-white'
               : 'bg-selapp-beige hover:bg-selapp-beige-dark text-selapp-brown'
-          } disabled:opacity-50`}
+            } disabled:opacity-50`}
           title="Lista"
         >
           •
@@ -162,7 +156,7 @@ export default function RichTextEditor({
           </>
         )}
       </div>
-      
+
       {/* Editor */}
       <EditorContent editor={editor} />
     </div>
