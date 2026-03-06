@@ -12,11 +12,17 @@ export default function SermonCounter() {
 
     const fetchSermons = async () => {
         try {
-            const res = await fetch("/api/sermons");
+            const res = await fetch("/api/sermons?limit=1"); // Optimizamos, solo necesitamos la meta
             if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setCount(data.length);
+                const responseData = await res.json();
+
+                // Inspeccionar el formato paginado { data: [], meta: { total: X } }
+                if (responseData.meta && typeof responseData.meta.total === 'number') {
+                    setCount(responseData.meta.total);
+                }
+                // Fallback de retrocompatibilidad si todavía es un array
+                else if (Array.isArray(responseData)) {
+                    setCount(responseData.length);
                 }
             }
         } catch (error) {
