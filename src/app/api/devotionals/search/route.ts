@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getPassage, parseReferenceToUSFM, NVI_NAME } from '@/lib/youversion';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,36 +9,25 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Parámetro q requerido' }, { status: 400 });
   }
 
+  // Convertir la referencia en español a USFM
+  const passageId = parseReferenceToUSFM(q.trim());
+  if (!passageId) {
+    return NextResponse.json(
+      { error: 'Referencia bíblica no reconocida. Ejemplo: Juan 3:16, Salmos 23:1' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const apiUrl = `https://rest.api.bible/v1/bibles/b32b9d1b64b4ef29-01/search?query=${q}`;
-
-    const response = await fetch(apiUrl, {
-      headers: {
-        'api-key': 'C1bni7FKP533XUjJ1Et52'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.data?.passages?.length) {
-      return NextResponse.json({ error: 'Versículo no encontrado' }, { status: 404 });
-    }
-
-    const passage = data.data.passages[0];
-
+    const passage = await getPassage(passageId);
     return NextResponse.json({
       reference: passage.reference,
       text: passage.content,
-      version: 'simple',
-      translation: 'The Holy Bible in Simple Spanish'
+      version: 'nvi',
+      translation: NVI_NAME
     });
-
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+    console.error('YouVersion API error (search):', error);
+    return NextResponse.json({ error: 'Versículo no encontrado' }, { status: 404 });
   }
 }

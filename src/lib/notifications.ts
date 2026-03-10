@@ -314,14 +314,20 @@ export async function checkAndNotifyStreaks() {
  */
 export async function notifyDevotionalMorning() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     // Buscar el versículo del día de hoy
-    const verseOfTheDay = await prisma.verseOfTheDay.findFirst({
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+    const verseOfTheDay = await prisma.versiculos_diarios.findFirst({
       where: {
-        date: today,
+        creado_en: {
+          gte: startOfToday,
+          lt: startOfTomorrow,
+        },
       },
+      orderBy: { creado_en: 'desc' },
     });
 
     const users = await prisma.user.findMany({
@@ -329,11 +335,11 @@ export async function notifyDevotionalMorning() {
     });
 
     const title = verseOfTheDay
-      ? `📖 ${verseOfTheDay.reference}`
+      ? `📖 ${verseOfTheDay.referencia}`
       : "Buenos días ☀️";
 
     const message = verseOfTheDay
-      ? `"${verseOfTheDay.text}"\n\n✨ Te invitamos a hacer tu devocional de hoy.`
+      ? `"${verseOfTheDay.texto}"\n\n✨ Te invitamos a hacer tu devocional de hoy.`
       : "Tu devocional del día está listo. ¡Comienza tu día con Dios!";
 
     const notifications = users.map((user) => ({

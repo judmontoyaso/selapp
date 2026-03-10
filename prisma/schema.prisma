@@ -163,19 +163,14 @@ model DailyReading {
   @@index([date])
 }
 
-model VerseOfTheDay {
-  id        String   @id @default(cuid())
-  date      DateTime @unique @db.Date
-  reference String
-  text      String
-  book      String
-  chapter   Int
-  verse     String
-  version   String   @default("simple")
-  tema      String?
-  createdAt DateTime @default(now())
-
-  @@index([date])
+model versiculos_diarios {
+  id        BigInt   @id @default(autoincrement())
+  tema      String
+  referencia String
+  usfm      String
+  bible_id  Int
+  texto     String
+  creado_en DateTime @default(now()) @db.Timestamptz(6)
 }
 
 model DiaryEntry {

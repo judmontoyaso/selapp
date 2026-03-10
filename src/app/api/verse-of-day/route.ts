@@ -1,25 +1,39 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-const BIBLE_API_KEY = "C1bni7FKP533XUjJ1Et52";
-
-// Mapeo de versiones de la Biblia disponibles (igual que en /api/devotionals/random)
-const bibleVersions: { [key: string]: { id: string; name: string } } = {
-  'nbv': { id: '6b7f504f1b6050c1-01', name: 'Biblica® Open Nueva Biblia Viva 2008 (No disponible)' },
-  'rvr1909': { id: '592420522e16049f-01', name: 'Reina Valera 1909' },
-  'pdpt': { id: '48acedcf8595c754-01', name: 'Spanish Bible, Palabla de Dios para ti' },
-  'pdpt-nt': { id: '48acedcf8595c754-02', name: 'Spanish NT + PP, Palabla de Dios para ti' },
-  'simple': { id: 'b32b9d1b64b4ef29-01', name: 'The Holy Bible in Simple Spanish' },
-  'fbv-nt': { id: '482ddd53705278cc-01', name: 'The New Testament in Spanish, Free Bible Version' },
-  'vbl': { id: '482ddd53705278cc-02', name: 'Versión Biblia Libre' }
-};
-
-// Versión por defecto
-const DEFAULT_VERSION = "simple";
+import { getPassage, NVI_NAME } from "@/lib/youversion";
 
 export async function GET() {
   try {
-    // Generar versículo del día basado en la fecha (mismo para todos los usuarios)
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+    // 1. Buscar versículo de hoy en versiculos_diarios (guardado por n8n)
+    const stored = await prisma.versiculos_diarios.findFirst({
+      where: {
+        creado_en: {
+          gte: startOfToday,
+          lt: startOfTomorrow
+        }
+      },
+      orderBy: { creado_en: 'desc' }
+    });
+
+    if (stored) {
+      return NextResponse.json({
+        reference: stored.referencia,
+        text: stored.texto,
+        usfm: stored.usfm,
+        version: 'nvi',
+        tema: stored.tema,
+        translation: NVI_NAME,
+        date: stored.creado_en.toISOString(),
+        source: 'n8n'
+      });
+    }
+
+    // 2. Fallback: generarlo desde bible_verses
     const dailyVerse = await generateDailyVerse();
 
     return NextResponse.json({
@@ -28,11 +42,11 @@ export async function GET() {
       book: dailyVerse.book,
       chapter: dailyVerse.chapter,
       verse: dailyVerse.verse,
-      version: DEFAULT_VERSION,
+      version: 'nvi',
       tema: dailyVerse.tema,
-      translation: bibleVersions[DEFAULT_VERSION].name,
+      translation: NVI_NAME,
       date: new Date().toISOString(),
-      source: 'api-generated'
+      source: 'generated'
     });
 
   } catch (error) {
@@ -72,45 +86,28 @@ async function generateDailyVerse() {
     // Construir la referencia bíblica
     const reference = `${selectedVerse.libro} ${selectedVerse.capitulo}:${selectedVerse.versiculo}`;
 
-    // Obtener el texto desde la API de Bible usando rest.api.bible
     const bookCode = selectedVerse.codigo_libro || 'GEN';
     const verseRange = selectedVerse.versiculo || '1';
-    const bibleId = bibleVersions[DEFAULT_VERSION].id;
-    const bibleVerseID = `${bookCode}.${selectedVerse.capitulo}.${verseRange}`;
-
-    const bibleApiUrl = `https://rest.api.bible/v1/bibles/${bibleId}/verses/${bibleVerseID}?include-chapter-numbers=false&include-verse-numbers=false`;
-
-    console.log('Versículo del día - Consultando rest.api.bible:', bibleApiUrl);
+    const passageId = `${bookCode}.${selectedVerse.capitulo}.${verseRange}`;
 
     try {
-      const response = await fetch(bibleApiUrl, {
-        headers: {
-          'api-key': BIBLE_API_KEY
-        },
-        cache: 'force-cache'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const verseText = data.data?.content || data.content || `<div class="scripture"><p class="q">${reference}</p></div>`;
-        
-        return {
-          reference,
-          text: verseText,
-          book: selectedVerse.libro!,
-          chapter: Number(selectedVerse.capitulo),
-          verse: selectedVerse.versiculo!,
-          tema: selectedVerse.tema || undefined
-        };
-      }
+      const passage = await getPassage(passageId);
+      return {
+        reference: passage.reference || reference,
+        text: passage.content,
+        book: selectedVerse.libro!,
+        chapter: Number(selectedVerse.capitulo),
+        verse: selectedVerse.versiculo!,
+        tema: selectedVerse.tema || undefined
+      };
     } catch (fetchError) {
-      console.error('Error de fetch rest.api.bible:', fetchError);
+      console.error('YouVersion API error (verse-of-day):', fetchError);
     }
 
     // Fallback si la API falla
     return {
       reference,
-      text: `<div class="scripture"><p class="q">${reference}</p></div>`,
+      text: reference,
       book: selectedVerse.libro!,
       chapter: Number(selectedVerse.capitulo),
       verse: selectedVerse.versiculo!,
@@ -144,39 +141,26 @@ async function getFallbackVerse() {
   const reference = `${selected.book} ${selected.chapter}:${selected.verse}`;
 
   // Intentar obtener desde la API
-  const bibleId = bibleVersions[DEFAULT_VERSION].id;
-  const bibleVerseID = `${selected.bookCode}.${selected.chapter}.${selected.verse}`;
-  const bibleApiUrl = `https://rest.api.bible/v1/bibles/${bibleId}/verses/${bibleVerseID}?include-chapter-numbers=false&include-verse-numbers=false`;
+  const passageId = `${selected.bookCode}.${selected.chapter}.${selected.verse}`;
 
   try {
-    const response = await fetch(bibleApiUrl, {
-      headers: {
-        'api-key': BIBLE_API_KEY
-      },
-      cache: 'force-cache'
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const verseText = data.data?.content || data.content || `<div class="scripture"><p class="q">${reference}</p></div>`;
-      
-      return {
-        reference,
-        text: verseText,
-        book: selected.book,
-        chapter: selected.chapter,
-        verse: selected.verse,
-        tema: selected.tema
-      };
-    }
+    const passage = await getPassage(passageId);
+    return {
+      reference: passage.reference || reference,
+      text: passage.content,
+      book: selected.book,
+      chapter: selected.chapter,
+      verse: selected.verse,
+      tema: selected.tema
+    };
   } catch (fetchError) {
-    console.error('Error de fetch rest.api.bible (fallback):', fetchError);
+    console.error('YouVersion API error (fallback):', fetchError);
   }
 
-  // Último fallback
+  // Último fallback: devolver solo la referencia como texto
   return {
     reference,
-    text: `<div class="scripture"><p class="q">${reference}</p></div>`,
+    text: reference,
     book: selected.book,
     chapter: selected.chapter,
     verse: selected.verse,

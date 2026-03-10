@@ -1,304 +1,165 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 
-interface FavoriteVerse {
+interface VerseResult {
   reference: string;
   text: string;
-  chapter?: number;
-  verses?: string;
-  book?: string;
   tema?: string;
-  translation?: string;
-  version?: string;
-  source?: 'api' | 'database';
-  note?: string;
 }
 
-const bibleVersions = [
-  { code: 'simple', name: 'Biblia en Español Simple' },
-  { code: 'rvr1909', name: 'Reina Valera 1909' },
-  { code: 'pdpt', name: 'Palabra de Dios para Ti' },
-  { code: 'pdpt-nt', name: 'Palabra de Dios para Ti (NT)' },
-  { code: 'fbv-nt', name: 'Biblia Libre (NT)' },
-  { code: 'vbl', name: 'Versión Biblia Libre' },
-  { code: 'nbv', name: 'Nueva Biblia Viva 2008 (No disponible)' }
-];
-
 export default function VerseSearchPage() {
-  // Estados para búsqueda por referencia
-  const [query, setQuery] = useState('');
-  const [searchVersion, setSearchVersion] = useState('simple');
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [searchResult, setSearchResult] = useState<FavoriteVerse | null>(null);
-  const [currentSearchInfo, setCurrentSearchInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [searchResult, setSearchResult] = useState<VerseResult | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  // Estados para versículo aleatorio
-  const [randomVersion, setRandomVersion] = useState('simple');
   const [loadingRandom, setLoadingRandom] = useState(false);
-  const [randomResult, setRandomResult] = useState<FavoriteVerse | null>(null);
-  const [currentRandomInfo, setCurrentRandomInfo] = useState<{book: string, chapter: number, verse: string} | null>(null);
+  const [randomResult, setRandomResult] = useState<VerseResult | null>(null);
 
-  // Función para buscar versículo por referencia
   const searchVerse = async () => {
-    if (!query.trim()) {
-      alert('Por favor ingresa una referencia bíblica (ej: Juan 3:16)');
-      return;
-    }
+    if (!query.trim()) return;
     setLoading(true);
+    setSearchError(null);
+    setSearchResult(null);
     try {
-      const res = await fetch(`/api/devotionals/search?q=${encodeURIComponent(query)}&version=${searchVersion}`);
+      const res = await fetch(`/api/devotionals/search?q=${encodeURIComponent(query.trim())}`);
       const data = await res.json();
       if (res.ok) {
         setSearchResult(data);
-        setCurrentSearchInfo({
-          book: data.book,
-          chapter: data.chapter,
-          verse: data.verses
-        });
       } else {
-        alert(data.error || 'Error al buscar versículo');
+        setSearchError(data.error || "VersÃ­culo no encontrado");
       }
-    } catch (err) {
-      console.error(err);
-      alert('Error al buscar versículo');
+    } catch {
+      setSearchError("Error de conexiÃ³n");
     } finally {
       setLoading(false);
     }
   };
 
-  // Cambiar versión del versículo buscado (mantiene el mismo versículo)
-  const handleSearchVersionChange = async (newVersion: string) => {
-    setSearchVersion(newVersion);
-    if (searchResult && currentSearchInfo) {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `/api/devotionals/search?q=${encodeURIComponent(`${currentSearchInfo.book} ${currentSearchInfo.chapter}:${currentSearchInfo.verse}`)}&version=${newVersion}`
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setSearchResult(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  // Función para obtener versículo aleatorio
-  const fetchRandomVerse = async (version?: string) => {
-    const versionToUse = version || randomVersion;
+  const fetchRandom = async () => {
     setLoadingRandom(true);
+    setRandomResult(null);
     try {
-      let url = `/api/devotionals/random?version=${versionToUse}`;
-      
-      // Si se está cambiando versión de un versículo ya cargado, mantener el mismo versículo
-      if (version && currentRandomInfo) {
-        url += `&book=${encodeURIComponent(currentRandomInfo.book)}&chapter=${currentRandomInfo.chapter}&verse=${currentRandomInfo.verse}`;
-      }
-      
-      const res = await fetch(url);
+      const res = await fetch("/api/devotionals/random");
       const data = await res.json();
-      
-      if (res.ok) {
-        setRandomResult(data);
-        setCurrentRandomInfo({
-          book: data.book,
-          chapter: data.chapter,
-          verse: data.verses
-        });
-      } else {
-        alert(data.error || 'Error al obtener versículo');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error al obtener versículo aleatorio');
+      if (res.ok) setRandomResult(data);
+    } catch {
+      // silent
     } finally {
       setLoadingRandom(false);
     }
   };
 
-  // Cambiar versión del versículo aleatorio (mantiene el mismo versículo)
-  const handleRandomVersionChange = (newVersion: string) => {
-    setRandomVersion(newVersion);
-    if (randomResult && currentRandomInfo) {
-      fetchRandomVerse(newVersion);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white p-6">
-      <div className="container mx-auto max-w-5xl">
-        <Link href="/" className="text-selapp-brown hover:underline mb-6 inline-block">
-          ← Volver al inicio
+    <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white p-4 md:p-8">
+      <div className="container mx-auto max-w-2xl">
+        <Link href="/" className="text-selapp-brown/70 hover:text-selapp-brown text-sm mb-8 inline-flex items-center gap-1 transition-colors">
+          â† Inicio
         </Link>
 
-        <h1 className="text-4xl font-bold text-selapp-brown mb-2 text-center">Versículos Bíblicos</h1>
-        <p className="text-center text-gray-600 mb-8">
-          Busca referencias específicas o descubre versículos aleatorios
-        </p>
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl md:text-4xl font-bold text-selapp-brown mb-1">
+            VersÃ­culos
+          </h1>
+          <span className="inline-block text-xs font-medium px-3 py-1 bg-selapp-brown/10 text-selapp-brown rounded-full">
+            Nueva VersiÃ³n Internacional Â· NVI 2022
+          </span>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* SECCIÓN 1: Buscar por Referencia */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🔍</span>
-              <h2 className="text-2xl font-bold text-selapp-brown">Buscar por Referencia</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Ingresa una referencia bíblica específica
-            </p>
+        {/* Search card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6 mb-5">
+          <h2 className="text-base font-semibold text-selapp-brown mb-3 flex items-center gap-2">
+            ðŸ” Buscar por referencia
+          </h2>
 
-            {/* Selector de versión para búsqueda */}
-            <div className="mb-4">
-              <label htmlFor="search-version" className="block text-sm font-medium text-gray-700 mb-2">
-                Versión
-              </label>
-              <select 
-                id="search-version"
-                value={searchVersion} 
-                onChange={(e) => handleSearchVersionChange(e.target.value)} 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-selapp-brown"
-              >
-                {bibleVersions.map(v => (
-                  <option key={v.code} value={v.code}>{v.name}</option>
-                ))}
-              </select>
-              {searchResult && currentSearchInfo && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Cambiar la versión mantendrá la misma referencia
-                </p>
-              )}
-            </div>
-
-            {/* Campo de búsqueda */}
-            <div className="mb-4">
-              <label htmlFor="verse-query" className="block text-sm font-medium text-gray-700 mb-2">
-                Referencia
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="verse-query"
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchVerse()}
-                  placeholder="Ej: Juan 3:16"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-selapp-brown"
-                />
-                <button 
-                  onClick={searchVerse} 
-                  disabled={loading} 
-                  className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-bold px-6 py-3 rounded-lg disabled:opacity-50"
-                >
-                  {loading ? '⏳' : '🔍'}
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Ej: Juan 3:16, Génesis 1:1, Salmos 23:1
-              </p>
-            </div>
-
-            {/* Resultado de búsqueda */}
-            {searchResult ? (
-              <div className="bg-selapp-beige p-4 rounded-lg border-l-4 border-selapp-brown">
-                <div 
-                  className="text-gray-800 text-lg mb-3 leading-relaxed font-serif italic" 
-                  dangerouslySetInnerHTML={{ __html: searchResult.text }} 
-                />
-                <div className="pt-3 border-t border-selapp-brown/20">
-                  <p className="font-bold text-selapp-brown">{searchResult.reference}</p>
-                  {searchResult.tema && (
-                    <p className="text-sm text-selapp-brown-light">Tema: {searchResult.tema}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 py-8">
-                <div className="text-5xl mb-2">📖</div>
-                <p className="text-sm">Ingresa una referencia y haz clic en buscar</p>
-              </div>
-            )}
-          </div>
-
-          {/* SECCIÓN 2: Versículo Aleatorio */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🎲</span>
-              <h2 className="text-2xl font-bold text-selapp-brown">Versículo Aleatorio</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Descubre un versículo sorpresa de la Biblia
-            </p>
-
-            {/* Selector de versión para aleatorio */}
-            <div className="mb-4">
-              <label htmlFor="random-version" className="block text-sm font-medium text-gray-700 mb-2">
-                Versión
-              </label>
-              <select 
-                id="random-version"
-                value={randomVersion} 
-                onChange={(e) => handleRandomVersionChange(e.target.value)} 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-selapp-brown"
-              >
-                {bibleVersions.map(v => (
-                  <option key={v.code} value={v.code}>{v.name}</option>
-                ))}
-              </select>
-              {randomResult && currentRandomInfo && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Cambiar la versión mantendrá el mismo versículo
-                </p>
-              )}
-            </div>
-
-            {/* Botón generar aleatorio */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchVerse()}
+              placeholder="Juan 3:16, Salmos 23:1, Filipenses 4:13â€¦"
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-selapp-brown/40 focus:border-selapp-brown/30 transition"
+            />
             <button
-              onClick={() => fetchRandomVerse()}
-              disabled={loadingRandom}
-              className="w-full bg-selapp-accent hover:bg-selapp-accent-dark text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-3 mb-4 shadow-md"
+              onClick={searchVerse}
+              disabled={loading || !query.trim()}
+              className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-semibold px-5 py-3 rounded-xl disabled:opacity-40 transition-colors min-w-[80px]"
             >
-              {loadingRandom ? (
-                <>
-                  <span className="animate-spin text-xl">⏳</span>
-                  <span>Cargando...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-xl">🔄</span>
-                  <span>Generar Versículo</span>
-                </>
-              )}
+              {loading ? <span className="inline-block animate-spin">â³</span> : "Buscar"}
             </button>
-
-            {/* Resultado aleatorio */}
-            {randomResult ? (
-              <div className="bg-selapp-beige p-4 rounded-lg border-l-4 border-selapp-accent">
-                <div 
-                  className="text-gray-800 text-lg mb-3 leading-relaxed font-serif italic" 
-                  dangerouslySetInnerHTML={{ __html: randomResult.text }} 
-                />
-                <div className="pt-3 border-t border-selapp-accent/20">
-                  <p className="font-bold text-selapp-brown">{randomResult.reference}</p>
-                  {randomResult.tema && (
-                    <p className="text-sm text-selapp-brown-light">Tema: {randomResult.tema}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 py-8">
-                <div className="text-5xl mb-2">✨</div>
-                <p className="text-sm">Haz clic en el botón para descubrir un versículo</p>
-              </div>
-            )}
           </div>
+
+          {searchError && (
+            <p className="text-red-500 text-sm mt-3">{searchError}</p>
+          )}
+
+          {searchResult ? (
+            <VerseCard verse={searchResult} color="brown" />
+          ) : !searchError && (
+            <p className="text-center text-gray-400 text-sm py-8">
+              Escribe una referencia y pulsa Enter o Buscar
+            </p>
+          )}
+        </div>
+
+        {/* Random card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6">
+          <h2 className="text-base font-semibold text-selapp-brown mb-3 flex items-center gap-2">
+            ðŸŽ² VersÃ­culo aleatorio
+          </h2>
+
+          <button
+            onClick={fetchRandom}
+            disabled={loadingRandom}
+            className="w-full bg-selapp-accent hover:bg-selapp-accent-dark text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 mb-1"
+          >
+            {loadingRandom ? "Cargandoâ€¦" : "Descubrir versÃ­culo"}
+          </button>
+
+          {randomResult ? (
+            <VerseCard verse={randomResult} color="accent" />
+          ) : (
+            <p className="text-center text-gray-400 text-sm py-6">
+              Pulsa el botÃ³n para descubrir un versÃ­culo
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+function VerseCard({
+  verse,
+  color,
+}: {
+  verse: VerseResult;
+  color: "brown" | "accent";
+}) {
+  const border = color === "brown" ? "border-selapp-brown" : "border-selapp-accent";
+  const badge = color === "brown" ? "bg-selapp-brown/10 text-selapp-brown" : "bg-selapp-accent/10 text-selapp-accent";
+
+  return (
+    <div className={`mt-4 bg-selapp-beige/50 rounded-xl border-l-4 ${border} p-5`}>
+      {verse.tema && (
+        <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 ${badge}`}>
+          {verse.tema}
+        </span>
+      )}
+      <p className="text-gray-800 text-lg leading-relaxed font-serif italic mb-4">
+        {verse.text}
+      </p>
+      <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+        <p className="font-semibold text-selapp-brown text-sm">{verse.reference}</p>
+        <span className="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+          NVI
+        </span>
+      </div>
+    </div>
+  );
+}
+

@@ -81,11 +81,10 @@ export default function VerseOfTheDay() {
         )}
       </div>
 
-      {/* Texto del versículo - más espacioso y legible */}
-      <div 
-        className="text-gray-800 text-xl md:text-2xl mb-6 leading-relaxed text-center font-serif scripture-styles px-4"
-        dangerouslySetInnerHTML={{ __html: verse.text }}
-      />
+      {/* Texto del versículo */}
+      <div className="text-gray-800 text-xl md:text-2xl mb-6 leading-relaxed text-center font-serif px-4">
+        {verse.text}
+      </div>
 
       {/* Footer minimalista */}
       <div className="flex items-center justify-center pt-4 border-t border-selapp-brown/10">
