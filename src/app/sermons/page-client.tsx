@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FiBookOpen, FiFileText, FiTrash2, FiPlus, FiSearch } from "react-icons/fi";
+import { getSermonsLocal, saveMultipleSermonsLocal, saveSermonLocal, deleteSermonLocal, queueOfflineMutation } from "@/lib/db-client";
 import Pagination from "@/components/Pagination";
 import SermonSkeleton from "@/components/SermonSkeleton";
 import SearchBar from "@/components/SearchBar";
@@ -39,6 +40,20 @@ export default function SermonsClient({
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Poblar BD Local con los datos SSR frescos y recuperar offline al montar
+  useEffect(() => {
+    if (initialSermons && initialSermons.length > 0) {
+      saveMultipleSermonsLocal(initialSermons).catch(console.error);
+    }
+    if (typeof window !== "undefined" && !navigator.onLine) {
+      getSermonsLocal().then(localData => {
+        if (localData.length > 0) {
+          setSermons(localData as Sermon[]);
+        }
+      }).catch(console.error);
+    }
+  }, [initialSermons]);
+
   const [showModal, setShowModal] = useState(false);
   const [newSermon, setNewSermon] = useState({
     title: "",
@@ -63,19 +78,32 @@ export default function SermonsClient({
       if (responseBody && responseBody.data) {
         setSermons(Array.isArray(responseBody.data) ? responseBody.data : []);
         setTotalPages(responseBody.meta?.totalPages || 1);
+        if (Array.isArray(responseBody.data)) {
+          saveMultipleSermonsLocal(responseBody.data);
+        }
       }
       // Manejar el formato antiguo directo (array)
       else if (Array.isArray(responseBody)) {
         setSermons(responseBody);
         setTotalPages(1);
+        saveMultipleSermonsLocal(responseBody);
       }
       else {
         console.warn("Formato Inesperado de API:", responseBody);
         setSermons([]);
       }
     } catch (error) {
-      console.error("Error fetching sermons:", error);
-      setSermons([]);
+      console.warn("Error de API, cayendo en caché local Offline...", error);
+      try {
+        const localSermons = await getSermonsLocal();
+        if (localSermons.length > 0) {
+          setSermons(localSermons as Sermon[]);
+        } else {
+          setSermons([]);
+        }
+      } catch (localDbErr) {
+        setSermons([]);
+      }
     } finally {
       setLoading(false);
       setIsSearching(false);
@@ -106,6 +134,18 @@ export default function SermonsClient({
       return;
     }
 
+    // Modo Offline puro interceptado
+    if (!navigator.onLine) {
+      setSermons(sermons.filter(sermon => sermon.id !== sermonId));
+      await deleteSermonLocal(sermonId);
+      await queueOfflineMutation({
+        type: 'DELETE',
+        endpoint: `/api/sermons/${sermonId}`,
+        payload: null
+      });
+      return;
+    }
+
     try {
       const res = await fetch(`/api/sermons/${sermonId}`, {
         method: "DELETE",
@@ -113,17 +153,41 @@ export default function SermonsClient({
 
       if (res.ok) {
         setSermons(sermons.filter(sermon => sermon.id !== sermonId));
+        await deleteSermonLocal(sermonId);
       } else {
         alert("Error al eliminar el sermón");
       }
     } catch (error) {
       console.error("Error deleting sermon:", error);
-      alert("Error al eliminar el sermón");
+      alert("Fallo de red al intentar eliminar");
     }
   };
 
   const handleCreateSermon = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!navigator.onLine) {
+      // Guardar como nota temporal sin conexión
+      const tempId = 'temp-' + Date.now();
+      const offlineSermon = { ...newSermon, id: tempId, _count: { messages: 0 } } as any;
+
+      setSermons([offlineSermon, ...sermons]);
+      await saveSermonLocal(offlineSermon);
+      await queueOfflineMutation({
+        type: 'CREATE',
+        endpoint: '/api/sermons',
+        payload: newSermon
+      });
+
+      setShowModal(false);
+      setNewSermon({
+        title: "",
+        pastor: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      // Opcional: router.push a vista de edición si estuviese implementado offline, de momento lo dejamos en lista
+      return;
+    }
+
     try {
       const res = await fetch("/api/sermons", {
         method: "POST",
@@ -133,6 +197,8 @@ export default function SermonsClient({
 
       if (res.ok) {
         const createdSermon = await res.json();
+        await saveSermonLocal(createdSermon);
+
         setShowModal(false);
         setNewSermon({
           title: "",

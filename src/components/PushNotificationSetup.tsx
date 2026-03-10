@@ -41,10 +41,10 @@ export default function PushNotificationSetup() {
 
   const registerServiceWorker = async () => {
     try {
-      const registration = await navigator.serviceWorker.register("/service-worker.js", {
+      const registration = await navigator.serviceWorker.register("/sw.js", {
         scope: "/"
       });
-      
+
       await navigator.serviceWorker.ready;
       console.log("✅ Service Worker registrado y activo:", registration);
 
@@ -65,7 +65,7 @@ export default function PushNotificationSetup() {
     try {
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
-      
+
       if (!subscription) {
         console.log("⚠️ No hay suscripción, creando una nueva...");
         await subscribeToPush(registration);
@@ -76,7 +76,7 @@ export default function PushNotificationSetup() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
-        
+
         if (!checkResponse.ok || !(await checkResponse.json()).exists) {
           console.log("⚠️ Suscripción no válida en servidor, renovando...");
           await subscription.unsubscribe();
@@ -102,7 +102,7 @@ export default function PushNotificationSetup() {
   const subscribeToPush = async (registration: ServiceWorkerRegistration) => {
     try {
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      
+
       if (!vapidPublicKey) {
         console.error("VAPID public key no configurada");
         return;
@@ -124,7 +124,7 @@ export default function PushNotificationSetup() {
         setIsSubscribed(true);
         setShowPrompt(false);
         console.log("✅ Suscrito a notificaciones push");
-        
+
         // Enviar notificación de prueba inmediatamente
         registration.showNotification("¡Notificaciones Activadas! 🎉", {
           body: "Ahora recibirás avisos del versículo del día y recordatorios",

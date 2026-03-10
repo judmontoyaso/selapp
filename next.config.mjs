@@ -1,3 +1,5 @@
+import withSerwistInit from "@serwist/next";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -9,19 +11,14 @@ const nextConfig = {
       },
     ],
   },
-  // Headers para Service Worker
   async headers() {
     return [
       {
-        source: '/service-worker.js',
+        source: '/sw.js',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-          {
-            key: 'Service-Worker-Allowed',
-            value: '/',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
@@ -29,4 +26,10 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: false, // Forzar SW en desarrollo para pruebas offline de PWA
+});
+
+export default withSerwist(nextConfig);

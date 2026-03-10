@@ -51,10 +51,10 @@ Permite a los usuarios compartir peticiones de oración, ver oraciones de otros 
 
 ## 5. Paginación
 
-- [ ] Componente Pagination reutilizable
-- [ ] Offset-based pagination en API
-- [ ] Skeleton loaders
-- [ ] Mantener scroll position
+- [ x] Componente Pagination reutilizable
+- [ x] Offset-based pagination en API
+- [ x] Skeleton loaders
+- [ x] Mantener scroll position
 
 ---
 

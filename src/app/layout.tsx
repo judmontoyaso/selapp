@@ -1,10 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import Sidebar from "@/components/Sidebar";
 import NotificationBell from "@/components/NotificationBell";
 import PushNotificationSetup from "@/components/PushNotificationSetup";
+import NetworkStatus from "@/components/NetworkStatus";
+import OfflineSync from "@/components/OfflineSync";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,11 +16,14 @@ export const metadata: Metadata = {
   description:
     "Selapp: devocionales diarios y notas de predicación con un diseño elegante, cálido y moderno.",
   manifest: "/manifest.json",
-  themeColor: "#6B4E3D",
   icons: {
     icon: "/favicon.png",
     apple: "/icon-192x192.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6B4E3D",
 };
 
 export default function RootLayout({
@@ -30,7 +36,6 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="theme-color" content="#6B4E3D" />
       </head>
       <body className={inter.className}>
         <SessionProvider>
@@ -39,6 +44,9 @@ export default function RootLayout({
             <NotificationBell />
           </div>
           <PushNotificationSetup />
+          <NetworkStatus />
+          <OfflineSync />
+          <ServiceWorkerRegister />
           {children}
         </SessionProvider>
       </body>
