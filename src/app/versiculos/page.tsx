@@ -134,27 +134,40 @@ export default function VersiculosPage() {
   const isFavorito = (usfm: string) => favoritos.some((f) => f.usfm === usfm);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-selapp-beige to-white p-4 md:p-8">
-      <div className="container mx-auto max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-24">
+      {/* Header sticky — igual que sermones */}
+      <div className="hidden sm:block bg-white/50 backdrop-blur-sm border-b border-selapp-brown/5 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-3">
+          <Link href="/" className="text-selapp-brown/60 hover:text-selapp-brown text-sm transition-colors">
+            ← Inicio
+          </Link>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 sm:py-8 mt-0 max-w-2xl">
+        {/* Back link móvil */}
         <Link
           href="/"
-          className="text-selapp-brown/70 hover:text-selapp-brown text-sm mb-8 inline-flex items-center gap-1 transition-colors"
+          className="sm:hidden text-selapp-brown/60 hover:text-selapp-brown text-sm mb-4 inline-flex items-center gap-1 transition-colors"
         >
           ← Inicio
         </Link>
 
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-selapp-brown mb-1">Versículos</h1>
-          <span className="inline-block text-xs font-medium px-3 py-1 bg-selapp-brown/10 text-selapp-brown rounded-full">
+        {/* Título */}
+        <div className="mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-selapp-brown mb-1 flex items-center gap-3">
+            <FiBookOpen className="w-7 h-7 text-selapp-accent" />
+            Versículos
+          </h1>
+          <p className="text-selapp-brown-light text-sm sm:text-base">
             Nueva Versión Internacional · NVI 2022
-          </span>
+          </p>
         </div>
 
         {/* Búsqueda */}
-        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6 mb-5">
-          <h2 className="text-base font-semibold text-selapp-brown mb-3 flex items-center gap-2">
-            <FiSearch className="w-4 h-4" /> Buscar por referencia
+        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-5 sm:p-6 mb-4">
+          <h2 className="text-sm font-semibold text-selapp-brown mb-3 flex items-center gap-2 uppercase tracking-wide">
+            <FiSearch className="w-4 h-4 text-selapp-accent" /> Buscar por referencia
           </h2>
           <div className="flex gap-2">
             <input
@@ -163,14 +176,21 @@ export default function VersiculosPage() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchVerse()}
               placeholder="Juan 3:16, Salmos 23:1…"
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-selapp-brown/40 focus:border-selapp-brown/30 transition"
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-selapp-brown/40 focus:border-selapp-brown/30 transition text-base"
             />
             <button
               onClick={searchVerse}
               disabled={searching || !query.trim()}
-              className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-semibold px-5 py-3 rounded-xl disabled:opacity-40 transition-colors min-w-[80px]"
+              className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-semibold px-4 py-3 rounded-xl disabled:opacity-40 transition-colors shrink-0 flex items-center gap-2"
             >
-              {searching ? <span className="inline-block animate-spin">⏳</span> : "Buscar"}
+              {searching ? (
+                <span className="inline-block animate-spin">⏳</span>
+              ) : (
+                <>
+                  <FiSearch className="w-4 h-4" />
+                  <span className="hidden sm:inline">Buscar</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -184,23 +204,23 @@ export default function VersiculosPage() {
               onSave={session ? () => saveFavorito(searchResult) : undefined}
             />
           ) : !searchError ? (
-            <p className="text-center text-gray-400 text-sm py-8">
-              Escribe una referencia y pulsa Enter o Buscar
+            <p className="text-center text-selapp-brown-light/60 text-sm py-6">
+              Escribe una referencia y pulsa Buscar o Enter
             </p>
           ) : null}
         </div>
 
         {/* Aleatorio */}
-        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6 mb-5">
-          <h2 className="text-base font-semibold text-selapp-brown mb-3 flex items-center gap-2">
-            <FiShuffle className="w-4 h-4" /> Versículo aleatorio
+        <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-5 sm:p-6 mb-4">
+          <h2 className="text-sm font-semibold text-selapp-brown mb-3 flex items-center gap-2 uppercase tracking-wide">
+            <FiShuffle className="w-4 h-4 text-selapp-accent" /> Versículo aleatorio
           </h2>
           <button
             onClick={fetchRandom}
             disabled={loadingRandom}
-            className="w-full bg-selapp-accent hover:bg-selapp-accent/90 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-40"
+            className="w-full bg-gradient-to-r from-selapp-brown to-selapp-accent text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-40 hover:shadow-md hover:-translate-y-0.5"
           >
-            {loadingRandom ? "Cargando…" : "Descubrir versículo"}
+            {loadingRandom ? "Cargando…" : "✨ Descubrir versículo"}
           </button>
 
           {randomResult ? (
@@ -211,31 +231,37 @@ export default function VersiculosPage() {
               onSave={session ? () => saveFavorito(randomResult) : undefined}
             />
           ) : (
-            <p className="text-center text-gray-400 text-sm py-6">
-              Pulsa el botón para descubrir un versículo
+            <p className="text-center text-selapp-brown-light/60 text-sm py-5">
+              Toca el botón para descubrir un versículo
             </p>
           )}
         </div>
 
         {/* Favoritos */}
-        {session && (
-          <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6">
-            <h2 className="text-base font-semibold text-selapp-brown mb-4 flex items-center gap-2">
+        {session ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-5 sm:p-6">
+            <h2 className="text-sm font-semibold text-selapp-brown mb-4 flex items-center gap-2 uppercase tracking-wide">
               <FiHeart className="w-4 h-4 text-red-400" /> Mis favoritos
               {favoritos.length > 0 && (
-                <span className="ml-auto text-xs text-gray-400 font-normal">
+                <span className="ml-auto text-xs text-selapp-brown-light font-normal normal-case">
                   {favoritos.length} versículo{favoritos.length !== 1 ? "s" : ""}
                 </span>
               )}
             </h2>
 
             {loadingFavoritos ? (
-              <p className="text-center text-gray-400 text-sm py-6">Cargando…</p>
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="h-24 bg-selapp-beige/60 rounded-xl animate-pulse" />
+                ))}
+              </div>
             ) : favoritos.length === 0 ? (
-              <div className="text-center py-8">
-                <FiBookOpen className="w-10 h-10 text-selapp-brown/20 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">
-                  Aún no tienes favoritos. Busca un versículo y toca ❤️.
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-selapp-beige rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FiBookOpen className="w-8 h-8 text-selapp-accent/40" />
+                </div>
+                <p className="text-selapp-brown-light text-sm">
+                  Aún no tienes favoritos.<br />Busca un versículo y toca el corazón.
                 </p>
               </div>
             ) : (
@@ -243,24 +269,24 @@ export default function VersiculosPage() {
                 {favoritos.map((f) => (
                   <li
                     key={f.id}
-                    className="bg-selapp-beige/50 rounded-xl border-l-4 border-selapp-brown p-4"
+                    className="selapp-card p-4 border-l-4 border-selapp-brown hover:shadow-md transition-all"
                   >
                     {f.tema && (
-                      <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-2 bg-selapp-brown/10 text-selapp-brown">
+                      <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-2 bg-selapp-accent/10 text-selapp-accent">
                         {f.tema}
                       </span>
                     )}
                     <p className="text-gray-800 leading-relaxed font-serif italic mb-3 text-base">
                       {f.texto}
                     </p>
-                    <div className="flex items-center justify-between border-t border-gray-200 pt-2">
+                    <div className="flex items-center justify-between border-t border-selapp-brown/10 pt-2">
                       <p className="font-semibold text-selapp-brown text-sm">{f.referencia}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-200">NVI</span>
+                        <span className="text-xs text-gray-400 bg-selapp-beige px-2 py-0.5 rounded-full border border-selapp-brown/10">NVI</span>
                         <button
                           onClick={() => deleteFavorito(f.id)}
                           disabled={deletingId === f.id}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded disabled:opacity-40"
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50 disabled:opacity-40"
                           title="Eliminar de favoritos"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -272,17 +298,18 @@ export default function VersiculosPage() {
               </ul>
             )}
           </div>
-        )}
-
-        {!session && (
-          <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-6 text-center">
-            <FiHeart className="w-8 h-8 text-selapp-brown/30 mx-auto mb-2" />
-            <p className="text-gray-500 text-sm mb-3">
-              Inicia sesión para guardar tus versículos favoritos.
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-8 text-center">
+            <div className="w-16 h-16 bg-selapp-beige rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiHeart className="w-7 h-7 text-selapp-accent/40" />
+            </div>
+            <p className="text-selapp-brown font-semibold mb-1">Guarda tus versículos</p>
+            <p className="text-selapp-brown-light text-sm mb-5">
+              Inicia sesión para guardar tus favoritos y acceder a ellos desde cualquier dispositivo.
             </p>
             <Link
               href="/auth/signin"
-              className="inline-block bg-selapp-brown text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-selapp-brown/90 transition-colors"
+              className="inline-block bg-selapp-brown text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-selapp-brown/90 transition-colors"
             >
               Iniciar sesión
             </Link>
@@ -305,16 +332,18 @@ function VerseCard({
   onSave?: () => void;
 }) {
   return (
-    <div className="mt-4 bg-selapp-beige/50 rounded-xl border-l-4 border-selapp-brown p-5">
+    <div className="mt-4 bg-selapp-beige/60 rounded-xl border-l-4 border-selapp-brown p-4 sm:p-5">
       {verse.tema && (
-        <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 bg-selapp-brown/10 text-selapp-brown">
+        <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 bg-selapp-accent/10 text-selapp-accent">
           {verse.tema}
         </span>
       )}
-      <p className="text-gray-800 text-lg leading-relaxed font-serif italic mb-4">{verse.text}</p>
-      <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+      <p className="text-gray-800 text-base sm:text-lg leading-relaxed font-serif italic mb-4">
+        {verse.text}
+      </p>
+      <div className="flex items-center justify-between border-t border-selapp-brown/10 pt-3">
         <p className="font-semibold text-selapp-brown text-sm">{verse.reference}</p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-200">
             NVI
           </span>
@@ -323,10 +352,10 @@ function VerseCard({
               onClick={onSave}
               disabled={saving || isFavorito}
               title={isFavorito ? "Ya en favoritos" : "Guardar en favoritos"}
-              className={`transition-colors p-1 rounded disabled:opacity-50 ${
+              className={`transition-colors p-1.5 rounded-lg disabled:opacity-50 ${
                 isFavorito
                   ? "text-red-400 cursor-default"
-                  : "text-gray-400 hover:text-red-400"
+                  : "text-gray-400 hover:text-red-400 hover:bg-red-50"
               }`}
             >
               <FiHeart className={`w-5 h-5 ${isFavorito ? "fill-red-400" : ""}`} />
