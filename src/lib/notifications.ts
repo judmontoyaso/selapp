@@ -54,6 +54,24 @@ export async function createNotification(params: CreateNotificationParams) {
  */
 export async function notifyVerseOfTheDay() {
   try {
+    // Buscar versículo de hoy
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+    const verseOfTheDay = await prisma.versiculos_diarios.findFirst({
+      where: {
+        creado_en: { gte: startOfToday, lt: startOfTomorrow },
+      },
+      orderBy: { creado_en: 'desc' },
+    });
+
+    const title = verseOfTheDay ? `📖 ${verseOfTheDay.referencia}` : "📖 Versículo del Día";
+    const message = verseOfTheDay
+      ? `"${verseOfTheDay.texto}"`
+      : "Ya está disponible el versículo del día. ¡No te lo pierdas!";
+
     const users = await prisma.user.findMany({
       select: { id: true },
     });
@@ -61,8 +79,8 @@ export async function notifyVerseOfTheDay() {
     const notifications = users.map((user) => ({
       userId: user.id,
       type: "verse_of_day" as const,
-      title: "📖 Nuevo Versículo del Día",
-      message: "Ya está disponible el versículo del día. ¡No te lo pierdas!",
+      title,
+      message,
       icon: "📖",
       link: "/",
     }));
@@ -74,8 +92,8 @@ export async function notifyVerseOfTheDay() {
     // Enviar push a todos
     try {
       await sendPushToAll({
-        title: "📖 Nuevo Versículo del Día",
-        message: "Ya está disponible el versículo del día. ¡No te lo pierdas!",
+        title,
+        message,
         icon: "📖",
         link: "/",
         tag: "verse_of_day",

@@ -6,7 +6,7 @@ import Image from "next/image";
 import AuthButtons from "@/components/AuthButtons";
 import SermonCounter from "@/components/SermonCounter";
 import VerseOfTheDay from "@/components/VerseOfTheDay";
-import { FiBookOpen, FiActivity, FiHeart, FiSearch } from "react-icons/fi";
+import { FiBookOpen, FiActivity, FiBookmark } from "react-icons/fi";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -96,7 +96,7 @@ export default function Home() {
 
             {/* Feature 3 */}
             <div className="selapp-card p-8 text-center flex flex-col items-center">
-              <FiHeart className="w-16 h-16 mb-4 text-selapp-accent" />
+              <FiBookmark className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
                 Devocionales
               </h3>
@@ -106,14 +106,14 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Feature 4 - Buscar Versículos */}
+            {/* Feature 4 - Versículos */}
             <div className="selapp-card p-8 text-center flex flex-col items-center">
-              <FiSearch className="w-16 h-16 mb-4 text-selapp-accent" />
+              <FiBookmark className="w-16 h-16 mb-4 text-selapp-accent" />
               <h3 className="text-2xl font-bold mb-3 text-selapp-brown">
-                Buscar Versículos
+                Versículos
               </h3>
               <p className="text-selapp-brown-light">
-                Busca referencias bíblicas rápidas y abre el versículo en la vista completa.
+                Busca referencias bíblicas en NVI y guarda tus versículos favoritos para tenerlos siempre a mano.
               </p>
             </div>
           </div>
@@ -259,49 +259,30 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Card de Devocionales - Compacto */}
-            <Link href="/devotionals" className="block">
+            {/* Card de Versículos - Compacto */}
+            <Link href="/versiculos" className="block">
               <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 mt-1">
-                    <FiHeart className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
+                    <FiBookmark className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
-                      Devocionales
+                      Versículos
                     </h3>
                     <p className="text-sm text-selapp-brown-light/80 mb-3">
-                      Reflexiones diarias
+                      Busca y guarda tus favoritos
                     </p>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
                         <span className="text-selapp-accent">•</span>
-                        <span>Versículos diarios</span>
+                        <span>Búsqueda por referencia</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-selapp-brown-light/70">
                         <span className="text-selapp-accent">•</span>
-                        <span>Preguntas guiadas</span>
+                        <span>Favoritos personales</span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Card de Buscar Versículos - Compacto */}
-            <Link href="/verse-search" className="block">
-              <div className="selapp-card p-6 group hover:shadow-lg transition-all hover:scale-[1.02] border-l-4 border-transparent hover:border-selapp-accent">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <FiSearch className="w-8 h-8 text-selapp-brown/50 group-hover:text-selapp-accent transition-colors" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-selapp-brown mb-1 group-hover:text-selapp-brown-dark transition-colors">
-                      Buscar Versículos
-                    </h3>
-                    <p className="text-sm text-selapp-brown-light/80">
-                      Referencias bíblicas y versículos aleatorios
-                    </p>
                   </div>
                 </div>
               </div>

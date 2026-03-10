@@ -122,11 +122,12 @@ model User {
   accounts          Account[]
   dailyReadings     DailyReading[]
   diaryEntries      DiaryEntry[]
-  notifications     Notification[]
-  pushSubscriptions PushSubscription[]
-  sessions          Session[]
-  sermons           sermons[]
-  devotionalAnswers DevotionalAnswer[]
+  notifications          Notification[]
+  pushSubscriptions      PushSubscription[]
+  sessions               Session[]
+  sermons                sermons[]
+  devotionalAnswers      DevotionalAnswer[]
+  versiculosFavoritos    versiculos_favoritos[]
 }
 
 model VerificationToken {
@@ -161,6 +162,21 @@ model DailyReading {
   @@unique([userId, date])
   @@index([userId])
   @@index([date])
+}
+
+model versiculos_favoritos {
+  id         BigInt   @id @default(autoincrement())
+  user_id    String
+  referencia String
+  usfm       String
+  bible_id   Int
+  texto      String
+  tema       String?
+  creado_en  DateTime @default(now()) @db.Timestamptz(6)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, usfm])
+  @@index([user_id])
 }
 
 model versiculos_diarios {

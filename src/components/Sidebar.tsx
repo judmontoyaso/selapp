@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { FiHome, FiBookOpen, FiHeart, FiSearch, FiBook, FiBell, FiMenu, FiX, FiLogOut } from "react-icons/fi";
+import { FiHome, FiBookOpen, FiBook, FiBell, FiMenu, FiBookmark } from "react-icons/fi";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,8 +35,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/", icon: <FiHome className="w-5 h-5" />, label: "Inicio" },
     { href: "/sermons", icon: <FiBookOpen className="w-5 h-5" />, label: "Sermones" },
-    { href: "/devotionals", icon: <FiHeart className="w-5 h-5" />, label: "Devocionales" },
-    { href: "/verse-search", icon: <FiSearch className="w-5 h-5" />, label: "Buscar Versículos" },
+    { href: "/versiculos", icon: <FiBookmark className="w-5 h-5" />, label: "Versículos" },
     { href: "/notes", icon: <FiBook className="w-5 h-5" />, label: "Diario" },
     { href: "/notifications", icon: <FiBell className="w-5 h-5" />, label: "Notificaciones", badge: unreadCount },
   ];

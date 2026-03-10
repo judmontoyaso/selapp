@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getPassage, NVI_NAME } from "@/lib/youversion";
+import { getPassage, NVI_NAME, NVI_BIBLE_ID } from "@/lib/youversion";
 
 export async function GET() {
   try {
@@ -25,6 +25,7 @@ export async function GET() {
         reference: stored.referencia,
         text: stored.texto,
         usfm: stored.usfm,
+        bible_id: stored.bible_id,
         version: 'nvi',
         tema: stored.tema,
         translation: NVI_NAME,
@@ -39,6 +40,8 @@ export async function GET() {
     return NextResponse.json({
       reference: dailyVerse.reference,
       text: dailyVerse.text,
+      usfm: dailyVerse.usfm,
+      bible_id: NVI_BIBLE_ID,
       book: dailyVerse.book,
       chapter: dailyVerse.chapter,
       verse: dailyVerse.verse,
@@ -95,6 +98,7 @@ async function generateDailyVerse() {
       return {
         reference: passage.reference || reference,
         text: passage.content,
+        usfm: passageId,
         book: selectedVerse.libro!,
         chapter: Number(selectedVerse.capitulo),
         verse: selectedVerse.versiculo!,
@@ -108,6 +112,7 @@ async function generateDailyVerse() {
     return {
       reference,
       text: reference,
+      usfm: passageId,
       book: selectedVerse.libro!,
       chapter: Number(selectedVerse.capitulo),
       verse: selectedVerse.versiculo!,
@@ -148,6 +153,7 @@ async function getFallbackVerse() {
     return {
       reference: passage.reference || reference,
       text: passage.content,
+      usfm: passageId,
       book: selected.book,
       chapter: selected.chapter,
       verse: selected.verse,
@@ -161,6 +167,7 @@ async function getFallbackVerse() {
   return {
     reference,
     text: reference,
+    usfm: passageId,
     book: selected.book,
     chapter: selected.chapter,
     verse: selected.verse,

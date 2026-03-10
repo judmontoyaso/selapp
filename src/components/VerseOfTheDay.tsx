@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { FiHeart } from "react-icons/fi";
 
 interface VerseOfDay {
   reference: string;
@@ -12,15 +14,33 @@ interface VerseOfDay {
   tema?: string;
   date: string;
   source: 'database' | 'api-generated';
+  usfm?: string;
+  bible_id?: number;
 }
 
 export default function VerseOfTheDay() {
+  const { data: session } = useSession();
   const [verse, setVerse] = useState<VerseOfDay | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingFav, setSavingFav] = useState(false);
+  const [isFavorito, setIsFavorito] = useState(false);
 
   useEffect(() => {
     fetchVerseOfDay();
   }, []);
+
+  // Check if current verse is already saved as favorite
+  useEffect(() => {
+    if (!session || !verse?.usfm) return;
+    fetch("/api/versiculos/favoritos")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.favoritos?.some((f: { usfm: string }) => f.usfm === verse.usfm)) {
+          setIsFavorito(true);
+        }
+      })
+      .catch(() => {});
+  }, [session, verse?.usfm]);
 
   const fetchVerseOfDay = async () => {
     setLoading(true);
@@ -37,6 +57,29 @@ export default function VerseOfTheDay() {
       console.error('Error fetching verse of day:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveFavorito = async () => {
+    if (!verse?.usfm) return;
+    setSavingFav(true);
+    try {
+      const res = await fetch("/api/versiculos/favoritos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          referencia: verse.reference,
+          usfm: verse.usfm,
+          bible_id: verse.bible_id,
+          texto: verse.text,
+          tema: verse.tema,
+        }),
+      });
+      if (res.ok) setIsFavorito(true);
+    } catch (error) {
+      console.error("Error saving favorite:", error);
+    } finally {
+      setSavingFav(false);
     }
   };
 
@@ -87,10 +130,25 @@ export default function VerseOfTheDay() {
       </div>
 
       {/* Footer minimalista */}
-      <div className="flex items-center justify-center pt-4 border-t border-selapp-brown/10">
-        <p className="text-selapp-brown font-semibold text-base">
-          {verse.reference}
-        </p>
+      <div className="flex items-center justify-between pt-4 border-t border-selapp-brown/10">
+        <div className="flex items-center gap-2">
+          <p className="text-selapp-brown font-semibold text-base">{verse.reference}</p>
+          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200">NVI</span>
+        </div>
+        {session && verse.usfm && (
+          <button
+            onClick={saveFavorito}
+            disabled={savingFav || isFavorito}
+            title={isFavorito ? "Guardado en favoritos" : "Guardar en favoritos"}
+            className={`p-1.5 rounded-full transition-colors ${
+              isFavorito
+                ? "text-red-400 cursor-default"
+                : "text-gray-400 hover:text-red-400 hover:bg-red-50"
+            }`}
+          >
+            <FiHeart className={`w-5 h-5 ${isFavorito ? "fill-red-400" : ""}`} />
+          </button>
+        )}
       </div>
     </div>
   );
