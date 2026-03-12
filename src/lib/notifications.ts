@@ -60,12 +60,19 @@ export async function notifyVerseOfTheDay() {
     const startOfTomorrow = new Date(startOfToday);
     startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-    const verseOfTheDay = await prisma.versiculos_diarios.findFirst({
+    // Buscar versículo de hoy primero; si no existe aún, usar el más reciente
+    let verseOfTheDay = await prisma.versiculos_diarios.findFirst({
       where: {
         creado_en: { gte: startOfToday, lt: startOfTomorrow },
       },
       orderBy: { creado_en: 'desc' },
     });
+
+    if (!verseOfTheDay) {
+      verseOfTheDay = await prisma.versiculos_diarios.findFirst({
+        orderBy: { creado_en: 'desc' },
+      });
+    }
 
     const title = verseOfTheDay ? `📖 ${verseOfTheDay.referencia}` : "📖 Versículo del Día";
     const message = verseOfTheDay

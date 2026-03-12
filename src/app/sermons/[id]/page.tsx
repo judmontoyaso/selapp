@@ -532,7 +532,7 @@ export default function SermonChatPage() {
             </div>
           ) : (
             /* VISTA CHAT - Para editar */
-            <div className="space-y-3">
+            <div className="space-y-3 pb-40">
               {sermon.messages.map((message) => (
                 <div key={message.id}>
                   {editingId === message.id ? (
