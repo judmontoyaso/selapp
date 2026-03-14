@@ -4,19 +4,8 @@ import { getPassage, NVI_NAME, NVI_BIBLE_ID } from "@/lib/youversion";
 
 export async function GET() {
   try {
-    const today = new Date();
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const startOfTomorrow = new Date(startOfToday);
-    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
-
-    // 1. Buscar versículo de hoy en versiculos_diarios (guardado por n8n)
+    // 1. Buscar siempre el último versículo en versiculos_diarios (guardado por n8n)
     const stored = await prisma.versiculos_diarios.findFirst({
-      where: {
-        creado_en: {
-          gte: startOfToday,
-          lt: startOfTomorrow
-        }
-      },
       orderBy: { creado_en: 'desc' }
     });
 
