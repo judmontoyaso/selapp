@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { FiSearch, FiShuffle, FiHeart, FiTrash2, FiBookOpen } from "react-icons/fi";
+import { BIBLE_VERSIONS, DEFAULT_VERSION } from "@/lib/youversion";
 
 interface VerseResult {
   reference: string;
@@ -11,6 +12,7 @@ interface VerseResult {
   usfm: string;
   bible_id: number;
   tema?: string;
+  abbreviation?: string;
 }
 
 interface Favorito {
@@ -25,6 +27,9 @@ interface Favorito {
 
 export default function VersiculosPage() {
   const { data: session } = useSession();
+
+  // Versión de la Biblia
+  const [version, setVersion] = useState(DEFAULT_VERSION);
 
   // Búsqueda
   const [query, setQuery] = useState("");
@@ -62,13 +67,26 @@ export default function VersiculosPage() {
     fetchFavoritos();
   }, [fetchFavoritos]);
 
-  const searchVerse = async () => {
-    if (!query.trim()) return;
+  // Permite llegar con /versiculos?q=Juan 3:16 (p. ej. desde Estadísticas)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) {
+      setQuery(q);
+      searchVerse(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const searchVerse = async (overrideQuery?: string) => {
+    const q = (overrideQuery ?? query).trim();
+    if (!q) return;
     setSearching(true);
     setSearchError(null);
     setSearchResult(null);
     try {
-      const res = await fetch(`/api/versiculos/buscar?q=${encodeURIComponent(query.trim())}`);
+      const res = await fetch(
+        `/api/versiculos/buscar?q=${encodeURIComponent(q)}&version=${version}`
+      );
       const data = await res.json();
       if (res.ok) {
         setSearchResult(data);
@@ -86,7 +104,7 @@ export default function VersiculosPage() {
     setLoadingRandom(true);
     setRandomResult(null);
     try {
-      const res = await fetch("/api/versiculos/aleatorio");
+      const res = await fetch(`/api/versiculos/aleatorio?version=${version}`);
       const data = await res.json();
       if (res.ok) setRandomResult(data);
     } catch {
@@ -133,6 +151,9 @@ export default function VersiculosPage() {
 
   const isFavorito = (usfm: string) => favoritos.some((f) => f.usfm === usfm);
 
+  const abbrFor = (bibleId: number) =>
+    Object.values(BIBLE_VERSIONS).find((v) => v.id === bibleId)?.abbreviation ?? "NVI";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-24">
       {/* Header sticky — igual que sermones */}
@@ -155,13 +176,35 @@ export default function VersiculosPage() {
 
         {/* Título */}
         <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-selapp-brown mb-1 flex items-center gap-3">
+          <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-selapp-brown-dark mb-1 flex items-center gap-3">
             <FiBookOpen className="w-7 h-7 text-selapp-accent" />
             Versículos
           </h1>
           <p className="text-selapp-brown-light text-sm sm:text-base">
-            Nueva Versión Internacional · NVI 2022
+            {BIBLE_VERSIONS[version].name}
           </p>
+        </div>
+
+        {/* Selector de versión */}
+        <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Versión de la Biblia">
+          {Object.values(BIBLE_VERSIONS).map((v) => (
+            <button
+              key={v.key}
+              onClick={() => v.available && setVersion(v.key)}
+              disabled={!v.available}
+              title={v.available ? v.name : `${v.name} — próximamente`}
+              className={`px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all border ${
+                version === v.key
+                  ? "bg-selapp-brown text-white border-selapp-brown shadow-sm"
+                  : v.available
+                  ? "bg-white text-selapp-brown border-selapp-brown/20 hover:border-selapp-brown/50 hover:bg-selapp-beige/60"
+                  : "bg-white/60 text-selapp-brown/35 border-selapp-brown/10 cursor-not-allowed"
+              }`}
+            >
+              {v.abbreviation}
+              {!v.available && <span className="ml-1 text-[10px] align-middle">pronto</span>}
+            </button>
+          ))}
         </div>
 
         {/* Búsqueda */}
@@ -179,7 +222,7 @@ export default function VersiculosPage() {
               className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-selapp-brown/40 focus:border-selapp-brown/30 transition text-base"
             />
             <button
-              onClick={searchVerse}
+              onClick={() => searchVerse()}
               disabled={searching || !query.trim()}
               className="bg-selapp-brown hover:bg-selapp-brown/90 text-white font-semibold px-4 py-3 rounded-xl disabled:opacity-40 transition-colors shrink-0 flex items-center gap-2"
             >
@@ -282,7 +325,7 @@ export default function VersiculosPage() {
                     <div className="flex items-center justify-between border-t border-selapp-brown/10 pt-2">
                       <p className="font-semibold text-selapp-brown text-sm">{f.referencia}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 bg-selapp-beige px-2 py-0.5 rounded-full border border-selapp-brown/10">NVI</span>
+                        <span className="text-xs text-gray-400 bg-selapp-beige px-2 py-0.5 rounded-full border border-selapp-brown/10">{abbrFor(f.bible_id)}</span>
                         <button
                           onClick={() => deleteFavorito(f.id)}
                           disabled={deletingId === f.id}
@@ -345,7 +388,7 @@ function VerseCard({
         <p className="font-semibold text-selapp-brown text-sm">{verse.reference}</p>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-200">
-            NVI
+            {verse.abbreviation || "NVI"}
           </span>
           {onSave && (
             <button

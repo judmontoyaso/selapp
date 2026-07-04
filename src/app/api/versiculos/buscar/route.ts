@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { getPassage, parseReferenceToUSFM, NVI_NAME, NVI_BIBLE_ID } from "@/lib/youversion";
+import { getPassage, parseReferenceToUSFM, resolveVersion } from "@/lib/youversion";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q");
+  const bible = resolveVersion(searchParams.get("version"));
 
   if (!q) {
     return NextResponse.json({ error: "Parámetro q requerido" }, { status: 400 });
@@ -18,14 +19,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    const passage = await getPassage(usfm);
+    const passage = await getPassage(usfm, "text", bible.key);
     return NextResponse.json({
       reference: passage.reference,
       text: passage.content,
       usfm,
-      bible_id: NVI_BIBLE_ID,
-      version: "nvi",
-      translation: NVI_NAME,
+      bible_id: bible.id,
+      version: bible.key,
+      abbreviation: bible.abbreviation,
+      translation: bible.name,
     });
   } catch (error) {
     console.error("YouVersion API error (buscar):", error);

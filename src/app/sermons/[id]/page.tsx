@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import RichTextEditor from "@/components/RichTextEditor";
-import { FiMessageSquare, FiFileText, FiEdit2, FiTrash2, FiCheck, FiArrowLeft, FiEdit3, FiX, FiPlus } from "react-icons/fi";
+import { FiMessageSquare, FiFileText, FiEdit2, FiTrash2, FiCheck, FiArrowLeft, FiEdit3, FiX, FiPlus, FiShare2 } from "react-icons/fi";
 
 interface Image {
   id: string;
@@ -46,6 +46,8 @@ export default function SermonChatPage() {
   const [viewMode, setViewMode] = useState<'document' | 'chat'>(
     searchParams.get('mode') === 'chat' ? 'chat' : 'document'
   );
+  const [sharing, setSharing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -319,6 +321,33 @@ export default function SermonChatPage() {
     }
   };
 
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const response = await fetch(`/api/sermons/${params.id}/share`, { method: "POST" });
+      if (!response.ok) throw new Error("share failed");
+      const { url, title } = await response.json();
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text: `Notas del sermón "${title}"`, url });
+          return;
+        } catch {
+          // usuario canceló el diálogo nativo → intentar copiar
+        }
+      }
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch (error) {
+      console.error("Error sharing sermon:", error);
+      alert("Error al generar el link para compartir");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("es-ES", {
@@ -427,15 +456,30 @@ export default function SermonChatPage() {
               )}
             </div>
 
-            {/* Botón Nueva Nota */}
+            {/* Botones Compartir y Nueva Nota */}
             {!editingSermon && (
-              <button
-                onClick={() => { setViewMode('chat'); setTimeout(scrollToBottom, 100); }}
-                className="flex-shrink-0 bg-white text-selapp-brown hover:bg-selapp-beige px-3 sm:px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 border border-white/80"
-              >
-                <FiPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nueva Nota</span>
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={handleShare}
+                  disabled={sharing}
+                  className="bg-white/10 hover:bg-white/20 p-2.5 rounded-xl transition-all flex items-center justify-center border border-white/10 disabled:opacity-50 relative"
+                  title="Compartir sermón"
+                >
+                  <FiShare2 className="w-5 h-5" />
+                  {shareCopied && (
+                    <span className="absolute top-full right-0 mt-2 bg-selapp-brown-dark text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-30">
+                      ✓ Link copiado
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setViewMode('chat'); setTimeout(scrollToBottom, 100); }}
+                  className="bg-white text-selapp-brown hover:bg-selapp-beige px-3 sm:px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 border border-white/80"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Nueva Nota</span>
+                </button>
+              </div>
             )}
           </div>
 

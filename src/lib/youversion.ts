@@ -1,8 +1,35 @@
 // YouVersion Bible API helper
 // Docs: https://developers.youversion.com/api/bibles
-// Bible: Nueva Versión Internacional 2022 (NVI-S), id: 128
+// Versiones en español disponibles para esta API key (GET /v1/bibles?language_ranges[]=es*)
 
-export const NVI_BIBLE_ID = 128;
+export interface BibleVersion {
+  id: number;
+  key: string;          // clave corta usada en la app y en la URL (?version=)
+  abbreviation: string; // abreviatura mostrada en la UI
+  name: string;
+  available: boolean;   // false = requiere aprobación del publisher en YouVersion
+}
+
+export const BIBLE_VERSIONS: Record<string, BibleVersion> = {
+  nvi:  { id: 128, key: "nvi",  abbreviation: "NVI",  name: "Nueva Versión Internacional", available: true },
+  nbla: { id: 103, key: "nbla", abbreviation: "NBLA", name: "Nueva Biblia de las Américas", available: true },
+  lbla: { id: 89,  key: "lbla", abbreviation: "LBLA", name: "La Biblia de las Américas", available: true },
+  rva:  { id: 147, key: "rva",  abbreviation: "RVA",  name: "Reina-Valera Antigua", available: true },
+  // NTV (Tyndale) aún no licenciada para esta API key — solicitar acceso en
+  // developers.youversion.com y cambiar available a true cuando lo aprueben.
+  ntv:  { id: 127, key: "ntv",  abbreviation: "NTV",  name: "Nueva Traducción Viviente", available: false },
+};
+
+export const DEFAULT_VERSION = "nvi";
+
+/** Resuelve una clave de versión (?version=) a una versión disponible; NVI por defecto. */
+export function resolveVersion(key?: string | null): BibleVersion {
+  const v = key ? BIBLE_VERSIONS[key.toLowerCase()] : undefined;
+  return v && v.available ? v : BIBLE_VERSIONS[DEFAULT_VERSION];
+}
+
+// Compatibilidad con código existente
+export const NVI_BIBLE_ID = BIBLE_VERSIONS.nvi.id;
 export const NVI_NAME = "Nueva Versión Internacional (NVI) 2022";
 
 const YVP_BASE_URL = "https://api.youversion.com/v1";
@@ -20,15 +47,18 @@ export interface YouVersionPassage {
 }
 
 /**
- * Fetch a passage from the YouVersion NVI 2022 Bible.
+ * Fetch a passage from a YouVersion Bible.
  * @param passageId USFM passage id, e.g. "JHN.3.16" or "PSA.23" or "PSA.23.1-3"
  * @param format  "text" (default) or "html"
+ * @param version clave de BIBLE_VERSIONS (default "nvi")
  */
 export async function getPassage(
   passageId: string,
-  format: "text" | "html" = "text"
+  format: "text" | "html" = "text",
+  version: string = DEFAULT_VERSION
 ): Promise<YouVersionPassage> {
-  const url = `${YVP_BASE_URL}/bibles/${NVI_BIBLE_ID}/passages/${encodeURIComponent(passageId)}?format=${format}`;
+  const bible = resolveVersion(version);
+  const url = `${YVP_BASE_URL}/bibles/${bible.id}/passages/${encodeURIComponent(passageId)}?format=${format}`;
   const res = await fetch(url, {
     headers: { "X-YVP-App-Key": getApiKey() },
     next: { revalidate: 3600 }, // Cache 1 hour at Next.js level
@@ -46,7 +76,7 @@ export async function getPassage(
 // Spanish book name → USFM 3-letter code
 // Covers all 66 canonical books + common abbreviations used in Spanish
 // ---------------------------------------------------------------------------
-const BOOK_MAP: Record<string, string> = {
+export const BOOK_MAP: Record<string, string> = {
   // Pentateuco
   "génesis": "GEN", "genesis": "GEN", "gén": "GEN", "gen": "GEN",
   "éxodo": "EXO", "exodo": "EXO", "éx": "EXO", "ex": "EXO",

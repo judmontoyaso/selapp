@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getPassage, NVI_NAME, NVI_BIBLE_ID } from "@/lib/youversion";
+import { getPassage, resolveVersion } from "@/lib/youversion";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const bible = resolveVersion(searchParams.get("version"));
+
   try {
     const allVerses = await prisma.bible_verses.findMany({
       where: {
@@ -23,15 +26,16 @@ export async function GET() {
     const usfm = `${bookCode}.${randomVerse.capitulo}.${randomVerse.versiculo}`;
 
     try {
-      const passage = await getPassage(usfm);
+      const passage = await getPassage(usfm, "text", bible.key);
       return NextResponse.json({
         reference: passage.reference || reference,
         text: passage.content,
         usfm,
-        bible_id: NVI_BIBLE_ID,
+        bible_id: bible.id,
         tema: randomVerse.tema ?? undefined,
-        translation: NVI_NAME,
-        version: "nvi",
+        translation: bible.name,
+        version: bible.key,
+        abbreviation: bible.abbreviation,
       });
     } catch {
       // Fallback si YouVersion falla
@@ -39,10 +43,11 @@ export async function GET() {
         reference,
         text: reference,
         usfm,
-        bible_id: NVI_BIBLE_ID,
+        bible_id: bible.id,
         tema: randomVerse.tema ?? undefined,
-        translation: NVI_NAME,
-        version: "nvi",
+        translation: bible.name,
+        version: bible.key,
+        abbreviation: bible.abbreviation,
       });
     }
   } catch (error) {
