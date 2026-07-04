@@ -167,7 +167,7 @@ export default function SermonsClient({
       </div>
 
       <div className="container mx-auto px-4 py-8 mt-4 sm:mt-0">
-        <h1 className="text-3xl sm:text-4xl font-bold text-selapp-brown mb-2 flex items-center gap-3">
+        <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-selapp-brown-dark mb-2 flex items-center gap-3">
           <FiBookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-selapp-accent" />
           Mis Sermones
         </h1>

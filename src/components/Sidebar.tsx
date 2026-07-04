@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { FiHome, FiBookOpen, FiBook, FiBell, FiMenu, FiBookmark } from "react-icons/fi";
+import { FiHome, FiBookOpen, FiBook, FiBell, FiMenu, FiBookmark, FiBarChart2 } from "react-icons/fi";
+import Logo from "@/components/Logo";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function Sidebar() {
     { href: "/", icon: <FiHome className="w-5 h-5" />, label: "Inicio" },
     { href: "/sermons", icon: <FiBookOpen className="w-5 h-5" />, label: "Sermones" },
     { href: "/versiculos", icon: <FiBookmark className="w-5 h-5" />, label: "Versículos" },
+    { href: "/sermons/insights", icon: <FiBarChart2 className="w-5 h-5" />, label: "Estadísticas" },
     { href: "/notes", icon: <FiBook className="w-5 h-5" />, label: "Diario" },
     { href: "/notifications", icon: <FiBell className="w-5 h-5" />, label: "Notificaciones", badge: unreadCount },
   ];
@@ -138,11 +140,9 @@ export default function Sidebar() {
           </nav>
 
           {/* Footer del sidebar */}
-          <div className="p-4 border-t border-selapp-brown/10">
-            <div className="text-xs text-selapp-brown-light text-center">
-              <p className="mb-1 font-semibold">Selapp v1.0</p>
-              <p>Tu compañero espiritual</p>
-            </div>
+          <div className="p-4 border-t border-selapp-brown/10 flex flex-col items-center gap-1.5">
+            <Logo size={24} href={null} />
+            <p className="text-xs text-selapp-brown-light">Tu compañero espiritual</p>
           </div>
         </div>
       </aside>

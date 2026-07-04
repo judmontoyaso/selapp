@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6B4E3D"/>
+      <stop offset="1" stop-color="#4A3429"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#tile)"/>
+  <!-- tallo: curva suave hacia la hoja derecha -->
+  <path d="M256 414 C256 330 256 280 262 218" stroke="#FFF9F0" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <!-- hoja izquierda (crema): base tocando el tallo -->
+  <path d="M258 292 C178 288 126 228 124 136 C214 146 258 208 258 292 Z" fill="#FFF9F0"/>
+  <!-- hoja derecha (accent): nace del extremo del tallo -->
+  <path d="M260 224 C260 148 312 100 388 98 C390 178 336 226 260 224 Z" fill="#D4A574"/>
+</svg>

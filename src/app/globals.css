@@ -10,7 +10,23 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Selección de texto con la identidad de la marca */
+::selection {
+  background: #D4A574;
+  color: #4A3429;
+}
+
+/* Anillo de foco consistente y accesible */
+:focus-visible {
+  outline: 2px solid #6B4E3D;
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 @layer utilities {
@@ -24,11 +40,11 @@ body {
 
 /* Estilos personalizados para Selapp */
 .selapp-card {
-  @apply bg-white rounded-2xl shadow-lg border border-selapp-beige-dark transition-all duration-300;
+  @apply bg-white rounded-2xl shadow-sm border border-selapp-brown/10 transition-all duration-300;
 }
 
 .selapp-card:hover {
-  @apply shadow-xl transform -translate-y-1;
+  @apply shadow-md;
 }
 
 .selapp-button {
