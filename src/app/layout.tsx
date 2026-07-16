@@ -3,7 +3,7 @@ import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import Sidebar from "@/components/Sidebar";
-import NotificationBell from "@/components/NotificationBell";
+import DesktopHeader from "@/components/DesktopHeader";
 import PushNotificationSetup from "@/components/PushNotificationSetup";
 import MobileTabBar from "@/components/MobileTabBar";
 
@@ -40,9 +40,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${lora.variable} font-sans min-h-screen flex flex-col`}>
         <SessionProvider>
           <Sidebar />
-          <div className="hidden sm:block fixed top-4 right-4 z-50">
-            <NotificationBell />
-          </div>
+          <DesktopHeader />
           <PushNotificationSetup />
           <div className="flex-1 pb-20 sm:pb-0">
             {children}

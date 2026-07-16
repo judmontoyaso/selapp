@@ -388,7 +388,7 @@ export default function SermonChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-24">
+    <div className={`min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white ${viewMode === 'chat' ? 'pb-52' : 'pb-12'}`}>
       {/* Header */}
       <div className="bg-gradient-to-br from-selapp-brown via-selapp-brown to-selapp-brown-dark text-white rounded-b-3xl shadow-lg mb-6">
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 pt-4 pb-3 flex flex-col gap-3">
@@ -576,7 +576,7 @@ export default function SermonChatPage() {
             </div>
           ) : (
             /* VISTA CHAT - Para editar */
-            <div className="space-y-3 pb-40">
+            <div className="space-y-3">
               {sermon.messages.map((message) => (
                 <div key={message.id}>
                   {editingId === message.id ? (

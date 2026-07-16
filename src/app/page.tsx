@@ -237,11 +237,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-16">
-      {/* Header */}
-      <header className="container mx-auto max-w-6xl px-4 py-5 flex items-center justify-between">
+      {/* Header - solo móvil */}
+      <header className="sm:hidden container mx-auto max-w-6xl px-4 py-5 flex items-center justify-between">
         <Logo size={34} />
-        {/* espacio superior derecho reservado para la campana y el menú */}
-        <span className="w-24" aria-hidden />
       </header>
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">

@@ -166,23 +166,6 @@ export default function SermonsClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-selapp-beige via-selapp-cream to-white pb-24">
-      {/* Header flotante solo para logo en desktop, oculto en móvil ya que no aporta y choca */}
-      <div className="hidden sm:block bg-white/50 backdrop-blur-sm border-b border-selapp-brown/5 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/selapp.png"
-                alt="Selapp"
-                width={100}
-                height={40}
-                className="object-contain w-[100px] h-[40px]"
-              />
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8 mt-4 sm:mt-0">
         <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-selapp-brown-dark mb-2 flex items-center gap-3">
           <FiBookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-selapp-accent" />

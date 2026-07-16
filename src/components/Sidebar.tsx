@@ -33,6 +33,12 @@ export default function Sidebar() {
     }
   };
 
+  useEffect(() => {
+    const handleOpenSidebar = () => setIsOpen(true);
+    window.addEventListener("selapp_open_sidebar", handleOpenSidebar);
+    return () => window.removeEventListener("selapp_open_sidebar", handleOpenSidebar);
+  }, []);
+
   const menuItems = [
     { href: "/", icon: <FiHome className="w-5 h-5" />, label: "Inicio", responsiveClass: "hidden sm:block" },
     { href: "/sermons", icon: <FiBookOpen className="w-5 h-5" />, label: "Sermones", responsiveClass: "hidden sm:block" },
@@ -46,16 +52,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Botón de toggle (Avatar de usuario) - solo visible cuando está cerrado */}
-      {!isOpen && session && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed top-3.5 right-4 z-50 w-9 h-9 bg-gradient-to-br from-selapp-accent to-selapp-brown text-white font-bold rounded-full flex items-center justify-center shadow-md hover:shadow-lg active:scale-95 transition-all border-2 border-white cursor-pointer uppercase text-xs"
-          aria-label="Abrir menú"
-        >
-          {session.user?.name?.[0] || session.user?.email?.[0] || "U"}
-        </button>
-      )}
 
       {/* Overlay oscuro cuando está abierto */}
       {isOpen && (

@@ -4,14 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FiHome, FiBookOpen, FiBookmark, FiBook, FiPlus, FiX } from "react-icons/fi";
+import { FiHome, FiBookOpen, FiBookmark, FiBook, FiPlus, FiX, FiMenu } from "react-icons/fi";
 
 export const MOBILE_TABS = [
   { label: "Inicio", path: "/", icon: <FiHome className="w-5 h-5" /> },
   { label: "Sermones", path: "/sermons", icon: <FiBookOpen className="w-5 h-5" /> },
-  // FAB + central
   { label: "Versículos", path: "/versiculos", icon: <FiBookmark className="w-5 h-5" /> },
-  { label: "Diario", path: "/notes", icon: <FiBook className="w-5 h-5" /> },
 ];
 
 export default function MobileTabBar() {
@@ -64,19 +62,21 @@ export default function MobileTabBar() {
             );
           })}
 
-          {/* Botón FAB Central */}
-          <div className="flex-1 flex justify-center -mt-6 z-50">
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="w-12 h-12 rounded-full bg-selapp-brown hover:bg-selapp-brown-dark text-white flex items-center justify-center shadow-lg active:scale-95 transition-all cursor-pointer border-4 border-white"
-              title="Nueva acción"
-            >
-              <FiPlus className="w-5 h-5 stroke-[3]" />
-            </button>
-          </div>
+          {/* Botón Central (Crear) - Plano y alineado */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex flex-col items-center justify-center flex-1 min-w-0 transition-colors py-1 cursor-pointer text-selapp-brown-light/60 hover:text-selapp-brown"
+            title="Nueva acción"
+          >
+            <span className="transition-transform mb-1">
+              <FiPlus className="w-5 h-5" />
+            </span>
+            <span className="text-[10px] truncate">Crear</span>
+          </button>
 
-          {/* Últimos dos tabs */}
-          {MOBILE_TABS.slice(2).map((tab) => {
+          {/* Tercer tab: Versículos */}
+          {(() => {
+            const tab = MOBILE_TABS[2];
             const active = pathname === tab.path;
             return (
               <Link
@@ -92,7 +92,18 @@ export default function MobileTabBar() {
                 <span className="text-[10px] truncate">{tab.label}</span>
               </Link>
             );
-          })}
+          })()}
+
+          {/* Cuarto tab: Menú (abre Sidebar) */}
+          <button
+            onClick={() => window.dispatchEvent(new Event("selapp_open_sidebar"))}
+            className="flex flex-col items-center justify-center flex-1 min-w-0 transition-colors py-1 cursor-pointer text-selapp-brown-light/60 hover:text-selapp-brown"
+          >
+            <span className="transition-transform mb-1">
+              <FiMenu className="w-5 h-5" />
+            </span>
+            <span className="text-[10px] truncate">Menú</span>
+          </button>
         </div>
       </nav>
 
