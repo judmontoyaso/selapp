@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import AuthButtons from "@/components/AuthButtons";
 import SermonCounter from "@/components/SermonCounter";
 import VerseOfTheDay from "@/components/VerseOfTheDay";
 import Logo, { LogoMark } from "@/components/Logo";
+import WordCloud from "@/components/WordCloud";
 import {
   FiMessageSquare,
   FiSun,
@@ -15,6 +17,7 @@ import {
   FiBookOpen,
   FiCheck,
   FiChevronRight,
+  FiCloud,
 } from "react-icons/fi";
 
 const FEATURES = [
@@ -49,6 +52,27 @@ const BENEFITS = [
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const [words, setWords] = useState<any[]>([]);
+  const [wordsLoading, setWordsLoading] = useState(true);
+
+  useEffect(() => {
+    if (session) {
+      fetch("/api/sermons/insights")
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error();
+        })
+        .then((data) => {
+          setWords(data.words || []);
+        })
+        .catch(() => {
+          // silent
+        })
+        .finally(() => {
+          setWordsLoading(false);
+        });
+    }
+  }, [session]);
 
   // Loading state
   if (status === "loading") {
@@ -235,6 +259,20 @@ export default function Home() {
           <div className="lg:col-span-2 space-y-6">
             <VerseOfTheDay />
             <SermonCounter />
+
+            {/* Nube de palabras de Prédicas */}
+            <div className="bg-white rounded-2xl shadow-sm border border-selapp-brown/10 p-5 sm:p-6">
+              <h2 className="text-sm font-semibold text-selapp-brown mb-4 flex items-center gap-2 uppercase tracking-wide">
+                <FiCloud className="w-4 h-4 text-selapp-accent" /> Nube de palabras de tus sermones
+              </h2>
+              {wordsLoading ? (
+                <div className="h-48 bg-selapp-beige/20 rounded-xl animate-pulse flex items-center justify-center text-xs text-selapp-brown-light">
+                  Cargando palabras clave...
+                </div>
+              ) : (
+                <WordCloud words={words} />
+              )}
+            </div>
           </div>
 
           {/* Columna derecha — accesos rápidos */}

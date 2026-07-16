@@ -4,23 +4,7 @@ import Link from "next/link";
 // sin el fondo, para usar sobre superficies claras).
 export function LogoMark({ className = "w-8 h-8" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
-      <path
-        d="M256 414 C256 330 256 280 262 218"
-        stroke="#6B4E3D"
-        strokeWidth="26"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M258 292 C178 288 126 228 124 136 C214 146 258 208 258 292 Z"
-        fill="#6B4E3D"
-      />
-      <path
-        d="M260 224 C260 148 312 100 388 98 C390 178 336 226 260 224 Z"
-        fill="#D4A574"
-      />
-    </svg>
+    <img src="/icons/nature.png" alt="" className={`${className} object-contain`} />
   );
 }
 

@@ -34,11 +34,11 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    { href: "/", icon: <FiHome className="w-5 h-5" />, label: "Inicio" },
-    { href: "/sermons", icon: <FiBookOpen className="w-5 h-5" />, label: "Sermones" },
-    { href: "/versiculos", icon: <FiBookmark className="w-5 h-5" />, label: "Versículos" },
+    { href: "/", icon: <FiHome className="w-5 h-5" />, label: "Inicio", responsiveClass: "hidden sm:block" },
+    { href: "/sermons", icon: <FiBookOpen className="w-5 h-5" />, label: "Sermones", responsiveClass: "hidden sm:block" },
+    { href: "/versiculos", icon: <FiBookmark className="w-5 h-5" />, label: "Versículos", responsiveClass: "hidden sm:block" },
     { href: "/sermons/insights", icon: <FiBarChart2 className="w-5 h-5" />, label: "Estadísticas" },
-    { href: "/notes", icon: <FiBook className="w-5 h-5" />, label: "Diario" },
+    { href: "/notes", icon: <FiBook className="w-5 h-5" />, label: "Diario", responsiveClass: "hidden sm:block" },
     { href: "/notifications", icon: <FiBell className="w-5 h-5" />, label: "Notificaciones", badge: unreadCount },
   ];
 
@@ -114,7 +114,7 @@ export default function Sidebar() {
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="space-y-2">
               {menuItems.map((item) => (
-                <li key={item.href}>
+                <li key={item.href} className={item.responsiveClass || ""}>
                   <Link
                     href={item.href}
                     onClick={() => setIsOpen(false)}

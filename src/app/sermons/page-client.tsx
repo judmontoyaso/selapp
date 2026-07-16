@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,6 +45,23 @@ export default function SermonsClient({
     pastor: "",
     date: new Date().toISOString().split("T")[0],
   });
+
+  useEffect(() => {
+    const handleOpenAdd = () => {
+      setShowModal(true);
+    };
+    window.addEventListener("selapp_open_add_sermon", handleOpenAdd);
+    return () => window.removeEventListener("selapp_open_add_sermon", handleOpenAdd);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("add") === "true") {
+      setShowModal(true);
+      const newUrl = window.location.pathname;
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, []);
 
   const fetchSermons = async (page: number, query: string) => {
     setLoading(true);
