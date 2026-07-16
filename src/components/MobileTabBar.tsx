@@ -20,8 +20,10 @@ export default function MobileTabBar() {
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // No renderizar si no está autenticado
-  if (!session) return null;
+  // Ocultar la barra en la vista de detalle de sermón para liberar espacio y no tapar el editor/chat
+  const isSermonChat = pathname.startsWith("/sermons/") && pathname !== "/sermons/insights" && pathname !== "/sermons";
+
+  if (!session || isSermonChat) return null;
 
   const handleAction = (type: "sermon" | "diary") => {
     setIsMenuOpen(false);

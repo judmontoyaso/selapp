@@ -46,14 +46,14 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Botón de toggle - solo visible cuando está cerrado */}
-      {!isOpen && (
+      {/* Botón de toggle (Avatar de usuario) - solo visible cuando está cerrado */}
+      {!isOpen && session && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 right-4 z-50 bg-white/50 backdrop-blur-md border border-selapp-brown/10 text-selapp-brown p-2.5 rounded-xl transition-all hover:bg-white/90 shadow-sm hover:shadow"
+          className="fixed top-3.5 right-4 z-50 w-9 h-9 bg-gradient-to-br from-selapp-accent to-selapp-brown text-white font-bold rounded-full flex items-center justify-center shadow-md hover:shadow-lg active:scale-95 transition-all border-2 border-white cursor-pointer uppercase text-xs"
           aria-label="Abrir menú"
         >
-          <FiMenu className="w-6 h-6" />
+          {session.user?.name?.[0] || session.user?.email?.[0] || "U"}
         </button>
       )}
 
