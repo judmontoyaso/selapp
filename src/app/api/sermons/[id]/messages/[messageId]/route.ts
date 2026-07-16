@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { autoLinkBibleVerses } from "@/lib/youversion";
 
 // PUT: Actualizar mensaje
 export async function PUT(
@@ -19,12 +20,15 @@ export async function PUT(
       );
     }
 
+    // Auto-detectar versículos bíblicos y anexarlos
+    const processedContent = await autoLinkBibleVerses(content);
+
     const message = await prisma.messages.update({
       where: {
         id: params.messageId,
       },
       data: {
-        content,
+        content: processedContent,
       },
       include: {
         images: true,

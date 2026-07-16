@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { autoLinkBibleVerses } from "@/lib/youversion";
 
 // POST: Crear nuevo mensaje en un sermón
 // Use a loose type for the context parameter to avoid strict RouteContext typing issues
@@ -16,6 +17,9 @@ export async function POST(request: Request, context: any) {
       );
     }
 
+    // Auto-detectar versículos bíblicos y anexarlos
+    const processedContent = await autoLinkBibleVerses(content);
+
     // Obtener el número de mensajes actuales para calcular el orden
     const messageCount = await prisma.messages.count({
       where: {
@@ -27,7 +31,7 @@ export async function POST(request: Request, context: any) {
     const message = await prisma.messages.create({
       data: {
         sermonId: params.id,
-        content,
+        content: processedContent,
         order: messageCount,
         ...(imageUrls && imageUrls.length > 0 && {
           images: {

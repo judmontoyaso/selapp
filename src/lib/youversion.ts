@@ -15,9 +15,8 @@ export const BIBLE_VERSIONS: Record<string, BibleVersion> = {
   nbla: { id: 103, key: "nbla", abbreviation: "NBLA", name: "Nueva Biblia de las Américas", available: true },
   lbla: { id: 89,  key: "lbla", abbreviation: "LBLA", name: "La Biblia de las Américas", available: true },
   rva:  { id: 147, key: "rva",  abbreviation: "RVA",  name: "Reina-Valera Antigua", available: true },
-  // NTV (Tyndale) aún no licenciada para esta API key — solicitar acceso en
-  // developers.youversion.com y cambiar available a true cuando lo aprueben.
-  ntv:  { id: 127, key: "ntv",  abbreviation: "NTV",  name: "Nueva Traducción Viviente", available: false },
+  // NTV (Tyndale) disponible vía scraping en getScrapedNtvPassage
+  ntv:  { id: 127, key: "ntv",  abbreviation: "NTV",  name: "Nueva Traducción Viviente", available: true },
 };
 
 export const DEFAULT_VERSION = "nvi";
@@ -46,6 +45,35 @@ export interface YouVersionPassage {
   reference: string; // Human-readable e.g. "Juan 3:16"
 }
 
+/** Scrap de versículos de NTV de YouVersion cuando no están disponibles por API oficial */
+export async function getScrapedNtvPassage(passageId: string): Promise<YouVersionPassage> {
+  const url = `https://www.bible.com/es/bible/127/${passageId}.NTV`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    },
+    next: { revalidate: 3600 } // Caché de 1 hora
+  });
+  if (!res.ok) {
+    throw new Error(`Scraper HTTP error ${res.status}`);
+  }
+  const html = await res.text();
+  const match = html.match(/<script id="__NEXT_DATA__" type="application\/json">([^<]+)<\/script>/);
+  if (!match) {
+    throw new Error("NEXT_DATA not found in YouVersion page");
+  }
+  const data = JSON.parse(match[1]);
+  const verseObj = data?.props?.pageProps?.verses?.[0];
+  if (!verseObj) {
+    throw new Error("Verse content not found in NEXT_DATA");
+  }
+  return {
+    id: passageId,
+    content: verseObj.content,
+    reference: verseObj.reference?.human || passageId
+  };
+}
+
 /**
  * Fetch a passage from a YouVersion Bible.
  * @param passageId USFM passage id, e.g. "JHN.3.16" or "PSA.23" or "PSA.23.1-3"
@@ -58,6 +86,16 @@ export async function getPassage(
   version: string = DEFAULT_VERSION
 ): Promise<YouVersionPassage> {
   const bible = resolveVersion(version);
+
+  if (bible.key === "ntv") {
+    try {
+      return await getScrapedNtvPassage(passageId);
+    } catch (scrapeErr) {
+      console.warn("NTV Scraping failed, falling back to NVI via official API:", scrapeErr);
+      return getPassage(passageId, format, DEFAULT_VERSION);
+    }
+  }
+
   const url = `${YVP_BASE_URL}/bibles/${bible.id}/passages/${encodeURIComponent(passageId)}?format=${format}`;
   const res = await fetch(url, {
     headers: { "X-YVP-App-Key": getApiKey() },
@@ -193,4 +231,50 @@ export function parseReferenceToUSFM(reference: string): string | null {
   }
 
   return `${usfmCode}.${chapter}`;
+}
+
+/**
+ * Escanea el contenido de un texto (HTML) en busca de menciones de citas bíblicas.
+ * Si encuentra citas válidas que no estén ya dentro de una cita blockquote,
+ * consulta el texto del versículo por API/scraping y lo concatena al final del contenido.
+ */
+export async function autoLinkBibleVerses(content: string): Promise<string> {
+  if (!content) return content;
+
+  // Regex para encontrar referencias en formato "Libro Capitulo:Versiculo(-VersiculoFinal)?"
+  const regex = /(?:[123]\s+)?(?:génesis|genesis|gén|gen|éxodo|exodo|éx|ex|levítico|levitico|lev|números|numeros|núm|num|deuteronomio|deut|deu|josué|josue|jos|jueces|jue|rut|rt|samuel|sam|sa|s|reyes|rey|re|r|crónicas|cronicas|cr|esdras|esd|nehemías|nehemias|neh|ester|est|job|salmos|salmo|sal|ps|psa|proverbios|prov|pro|pr|eclesiastés|eclesiastes|ecl|cantares|cantardeloscantares|cantar|cnt|isaías|isaias|is|isa|jeremías|jeremias|jer|lamentaciones|lam|ezequiel|eze|ez|daniel|dan|dn|oseas|os|joel|jl|amós|amos|am|abdías|abdias|abd|jonás|jonas|jon|miqueas|miq|mic|nahúm|nahum|nah|habacuc|hab|sofonías|sofonias|sof|hageo|hag|zacarías|zacarias|zac|malaquías|malaquias|mal|mateo|mt|mat|marcos|mr|mc|mrk|lucas|lc|luk|juan|jn|jhn|hechos|act|hch|romanos|rom|ro|corintios|co|cor|gálatas|gal|efesios|ef|efe|eph|filipenses|fil|php|colosenses|col|tesalonicenses|ts|tes|timoteo|ti|tm|tito|tit|filemón|filemon|flm|hebreos|heb|santiago|stg|jas|pedro|pe|p|judas|jud|apocalipsis|ap|apo|rev)\s+\d+:\d+(?:-\d+)?/gi;
+
+  // Limpiar etiquetas HTML temporales para hacer el match de forma limpia
+  const cleanText = content.replace(/<[^>]*>/g, " ");
+  const matches = cleanText.match(regex);
+  if (!matches) return content;
+
+  // Eliminar duplicados
+  const uniqueRefs = Array.from(new Set(matches.map(m => m.trim().toLowerCase())));
+  
+  let appendedBlocks = "";
+
+  for (const ref of uniqueRefs) {
+    // Si la referencia ya está dentro de un blockquote (ej: en una edición previa), no volver a adjuntarla
+    const escapedRef = ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const insideBlockquoteRegex = new RegExp(`<blockquote[^>]*>[\\s\\S]*?${escapedRef}[\\s\\S]*?<\/blockquote>`, "i");
+    if (insideBlockquoteRegex.test(content)) {
+      continue;
+    }
+
+    try {
+      const usfm = parseReferenceToUSFM(ref);
+      if (usfm) {
+        // Consultar pasaje (por defecto NVI)
+        const passage = await getPassage(usfm, "text", "nvi");
+        if (passage && passage.content) {
+          appendedBlocks += `<blockquote class="border-l-4 border-selapp-accent pl-4 italic my-3 text-selapp-brown-light bg-selapp-beige/30 py-2 rounded-r"><strong>${passage.reference} (NVI):</strong> ${passage.content}</blockquote>`;
+        }
+      }
+    } catch (err) {
+      console.warn(`[AutoLink] Error consultando versículo para "${ref}":`, err);
+    }
+  }
+
+  return content + appendedBlocks;
 }
