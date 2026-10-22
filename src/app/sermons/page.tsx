@@ -79,6 +79,7 @@ export default async function SermonsPage(props: { searchParams: Promise<any> | 
     updatedAt: s.updatedAt.toISOString(),
   }));
 
+  // Si sermonsRaw.length === 0, no se encontraron sermones para los filtros aplicados (empty state)
   const totalPages = Math.ceil(total / validLimit);
 
   return (

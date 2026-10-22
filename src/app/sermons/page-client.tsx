@@ -8,6 +8,8 @@ import { FiBookOpen, FiFileText, FiTrash2, FiPlus, FiSearch } from "react-icons/
 import Pagination from "@/components/Pagination";
 import SermonSkeleton from "@/components/SermonSkeleton";
 import SearchBar from "@/components/SearchBar";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Sermon {
   id: string;
@@ -38,6 +40,8 @@ export default function SermonsClient({
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [isSearching, setIsSearching] = useState(false);
+  const [sermonToDelete, setSermonToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [deletingSermon, setDeletingSermon] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [newSermon, setNewSermon] = useState({
@@ -118,24 +122,30 @@ export default function SermonsClient({
     fetchSermons(page, searchQuery);
   };
 
-  const handleDeleteSermon = async (sermonId: string, sermonTitle: string) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar el sermón "${sermonTitle}"? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+  const handleDeleteSermon = (sermonId: string, sermonTitle: string) => {
+    setSermonToDelete({ id: sermonId, title: sermonTitle });
+  };
 
+  const confirmDeleteSermon = async () => {
+    if (!sermonToDelete) return;
+    setDeletingSermon(true);
     try {
-      const res = await fetch(`/api/sermons/${sermonId}`, {
+      const res = await fetch(`/api/sermons/${sermonToDelete.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        setSermons(sermons.filter(sermon => sermon.id !== sermonId));
+        setSermons(sermons.filter(sermon => sermon.id !== sermonToDelete.id));
+        toast.success("Sermón eliminado correctamente");
       } else {
-        alert("Error al eliminar el sermón");
+        toast.error("Error al eliminar el sermón");
       }
     } catch (error) {
       console.error("Error deleting sermon:", error);
-      alert("Error al eliminar el sermón");
+      toast.error("Error al eliminar el sermón");
+    } finally {
+      setDeletingSermon(false);
+      setSermonToDelete(null);
     }
   };
 
@@ -370,6 +380,16 @@ export default function SermonsClient({
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={!!sermonToDelete}
+        onOpenChange={(open) => !open && setSermonToDelete(null)}
+        title="Eliminar sermón"
+        description={`¿Estás seguro de que quieres eliminar el sermón "${sermonToDelete?.title}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        variant="destructive"
+        loading={deletingSermon}
+        onConfirm={confirmDeleteSermon}
+      />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 // Marca de Selapp: brote de dos hojas (mismo trazo que public/logo-mark.svg,
 // sin el fondo, para usar sobre superficies claras).
 export function LogoMark({ className = "w-8 h-8" }: { className?: string }) {
   return (
-    <img src="/icons/nature.png" alt="" className={`${className} object-contain`} />
+    <Image alt="Selapp Logo" src="/icons/nature.png" width={32} height={32} className={`${className} object-contain`} />
   );
 }
 

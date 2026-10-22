@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import RichTextEditor from "@/components/RichTextEditor";
 import { FiMessageSquare, FiFileText, FiEdit2, FiTrash2, FiCheck, FiArrowLeft, FiEdit3, FiX, FiPlus, FiShare2 } from "react-icons/fi";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-interface Image {
+interface SermonImage {
   id: string;
   url: string;
   fileName: string;
@@ -17,7 +19,7 @@ interface Message {
   id: string;
   content: string;
   createdAt: string;
-  images: Image[];
+  images: SermonImage[];
   order: number;
 }
 
@@ -48,31 +50,13 @@ export default function SermonChatPage() {
   );
   const [sharing, setSharing] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (params.id) {
-      fetchSermon();
-    }
-  }, [params.id]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [sermon?.messages]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [viewMode]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchSermon = async () => {
+  const fetchSermon = useCallback(async () => {
     try {
       const response = await fetch(`/api/sermons/${params.id}`);
       if (!response.ok) {
@@ -86,7 +70,27 @@ export default function SermonChatPage() {
     } finally {
       setLoading(false);
     }
+  }, [params.id, router]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchSermon();
+    }
+  }, [params.id, fetchSermon]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [sermon?.messages]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [viewMode]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -150,7 +154,7 @@ export default function SermonChatPage() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Error al enviar mensaje");
+      toast.error("Error al enviar mensaje");
     } finally {
       setUploading(false);
     }
@@ -264,26 +268,36 @@ export default function SermonChatPage() {
       }
     } catch (error) {
       console.error("Error updating message:", error);
-      alert("Error al actualizar el mensaje");
+      toast.error("Error al actualizar el mensaje");
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm("¿Estás seguro de eliminar esta nota?")) return;
+  const handleDeleteMessage = (messageId: string) => {
+    setDeleteMessageId(messageId);
+  };
 
+  const confirmDeleteMessage = async () => {
+    if (!deleteMessageId) return;
+    setDeletingMessage(true);
     try {
-      const response = await fetch(`/api/sermons/${params.id}/messages/${messageId}`, {
+      const response = await fetch(`/api/sermons/${params.id}/messages/${deleteMessageId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
         fetchSermon();
+        toast.success("Nota eliminada correctamente");
+      } else {
+        toast.error("Error al eliminar el mensaje");
       }
     } catch (error) {
       console.error("Error deleting message:", error);
-      alert("Error al eliminar el mensaje");
+      toast.error("Error al eliminar el mensaje");
+    } finally {
+      setDeletingMessage(false);
+      setDeleteMessageId(null);
     }
   };
 
@@ -295,7 +309,7 @@ export default function SermonChatPage() {
 
   const handleSaveSermon = async () => {
     if (!editTitle.trim() || !editPastor.trim()) {
-      alert("El título y el pastor son obligatorios");
+      toast.warning("El título y el pastor son obligatorios");
       return;
     }
 
@@ -311,11 +325,11 @@ export default function SermonChatPage() {
         setEditingSermon(false);
         fetchSermon();
       } else {
-        alert("Error al actualizar el sermón");
+        toast.error("Error al actualizar el sermón");
       }
     } catch (error) {
       console.error("Error updating sermon:", error);
-      alert("Error al actualizar el sermón");
+      toast.error("Error al actualizar el sermón");
     } finally {
       setUploading(false);
     }
@@ -342,7 +356,7 @@ export default function SermonChatPage() {
       setTimeout(() => setShareCopied(false), 2500);
     } catch (error) {
       console.error("Error sharing sermon:", error);
-      alert("Error al generar el link para compartir");
+      toast.error("Error al generar el link para compartir");
     } finally {
       setSharing(false);
     }
@@ -547,10 +561,12 @@ export default function SermonChatPage() {
                               className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
                               onClick={() => window.open(img.url, "_blank")}
                             >
-                              <img
+                              <Image
                                 src={img.url}
-                                alt={img.fileName}
-                                className="w-full h-auto"
+                                alt={img.fileName || "Imagen de nota"}
+                                width={600}
+                                height={400}
+                                className="w-full h-auto object-cover"
                               />
                             </div>
                           ))}
@@ -624,7 +640,7 @@ export default function SermonChatPage() {
                   ) : (
                     /* Burbuja de chat con botón editar */
                     <div className="flex justify-end">
-                      <div className="bg-[#DCF8C6] rounded-2xl p-3 max-w-[80%] shadow-md relative group">
+                      <div className="bg-card dark:bg-card border border-selapp-brown/15 dark:border-border text-foreground rounded-2xl p-3 max-w-[80%] shadow-sm relative group">
                         {/* Botón editar */}
                         <button
                           onClick={() => handleEdit(message)}
@@ -637,11 +653,13 @@ export default function SermonChatPage() {
                         {message.images.length > 0 && (
                           <div className="mb-2 space-y-2">
                             {message.images.map((img) => (
-                              <img
+                              <Image
                                 key={img.id}
                                 src={img.url}
-                                alt={img.fileName}
-                                className="rounded-lg max-w-full cursor-pointer"
+                                alt={img.fileName || "Imagen adjunta"}
+                                width={500}
+                                height={350}
+                                className="rounded-lg max-w-full h-auto cursor-pointer"
                                 onClick={() => window.open(img.url, "_blank")}
                               />
                             ))}
@@ -680,9 +698,12 @@ export default function SermonChatPage() {
               <div className="mb-3 flex gap-2 overflow-x-auto pb-2">
                 {selectedImages.map((file, index) => (
                   <div key={index} className="relative flex-shrink-0">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
-                      alt={file.name}
+                      alt={file.name || "Preview"}
+                      width={96}
+                      height={96}
+                      unoptimized
                       className="h-24 w-24 object-cover rounded-lg"
                     />
                     <button
@@ -739,6 +760,16 @@ export default function SermonChatPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleteMessageId}
+        onOpenChange={(open) => !open && setDeleteMessageId(null)}
+        title="Eliminar nota"
+        description="¿Estás seguro de eliminar esta nota? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="destructive"
+        loading={deletingMessage}
+        onConfirm={confirmDeleteMessage}
+      />
     </div>
   );
 }

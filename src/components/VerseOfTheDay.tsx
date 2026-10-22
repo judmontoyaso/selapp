@@ -85,10 +85,24 @@ export default function VerseOfTheDay() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-8 border border-selapp-brown/10">
-        <div className="flex items-center justify-center">
-          <span className="text-2xl animate-spin">⏳</span>
-          <span className="ml-3 text-selapp-brown-light">Cargando versículo del día...</span>
+      <div className="bg-white dark:bg-card rounded-2xl shadow-sm p-8 md:p-10 border border-selapp-brown/10 dark:border-border space-y-4 animate-pulse">
+        <div className="flex items-center justify-between pb-4 border-b border-selapp-brown/10 dark:border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-muted/80 dark:bg-muted/40" />
+            <div className="space-y-1.5">
+              <div className="h-5 w-36 bg-muted/80 dark:bg-muted/40 rounded-md" />
+              <div className="h-3.5 w-24 bg-muted/60 dark:bg-muted/30 rounded-md" />
+            </div>
+          </div>
+          <div className="h-6 w-20 bg-muted/80 dark:bg-muted/40 rounded-full" />
+        </div>
+        <div className="space-y-2 py-4">
+          <div className="h-6 w-5/6 mx-auto bg-muted/80 dark:bg-muted/40 rounded-md" />
+          <div className="h-6 w-4/6 mx-auto bg-muted/70 dark:bg-muted/30 rounded-md" />
+        </div>
+        <div className="flex items-center justify-between pt-4 border-t border-selapp-brown/10 dark:border-border">
+          <div className="h-5 w-28 bg-muted/80 dark:bg-muted/40 rounded-md" />
+          <div className="h-5 w-12 bg-muted/60 dark:bg-muted/30 rounded-full" />
         </div>
       </div>
     );

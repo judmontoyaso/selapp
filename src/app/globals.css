@@ -1,27 +1,91 @@
+@import "scripture-styles/dist/css/scripture-styles.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #FAF5EB;
-  --foreground: #4A3429;
+@layer base {
+  :root {
+    --background: 40 33% 96%;
+    --foreground: 20 29% 23%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 29% 23%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 29% 23%;
+
+    --primary: 22 28% 34%;
+    --primary-foreground: 40 33% 97%;
+
+    --secondary: 36 30% 90%;
+    --secondary-foreground: 22 28% 28%;
+
+    --muted: 36 20% 92%;
+    --muted-foreground: 24 16% 40%;
+
+    --accent: 36 35% 91%;
+    --accent-foreground: 20 29% 23%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 36 20% 86%;
+    --input: 36 20% 86%;
+    --ring: 22 28% 34%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 24 12% 9%;
+    --foreground: 36 25% 93%;
+
+    --card: 24 12% 13%;
+    --card-foreground: 36 25% 93%;
+
+    --popover: 24 12% 12%;
+    --popover-foreground: 36 25% 93%;
+
+    --primary: 31 55% 58%;
+    --primary-foreground: 24 15% 9%;
+
+    --secondary: 24 10% 19%;
+    --secondary-foreground: 36 20% 88%;
+
+    --muted: 24 10% 17%;
+    --muted-foreground: 30 10% 65%;
+
+    --accent: 24 12% 20%;
+    --accent-foreground: 36 25% 93%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 24 10% 19%;
+    --input: 24 10% 19%;
+    --ring: 31 55% 58%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* Selección de texto con la identidad de la marca */
+/* Selección de texto adaptativa con la identidad de la marca */
 ::selection {
-  background: #D4A574;
-  color: #4A3429;
+  background: hsl(var(--primary) / 0.25);
+  color: hsl(var(--foreground));
 }
 
 /* Anillo de foco consistente y accesible */
 :focus-visible {
-  outline: 2px solid #6B4E3D;
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
@@ -35,12 +99,9 @@ html {
   }
 }
 
-/* Importar estilos completos para contenido bíblico */
-@import "scripture-styles/dist/css/scripture-styles.css";
-
-/* Estilos personalizados para Selapp */
+/* Clases de compatibilidad Selapp — ahora adaptadas automáticamente a Dark Mode */
 .selapp-card {
-  @apply bg-white rounded-2xl shadow-sm border border-selapp-brown/10 transition-all duration-300;
+  @apply bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all duration-300;
 }
 
 .selapp-card:hover {
@@ -48,20 +109,20 @@ html {
 }
 
 .selapp-button {
-  @apply bg-selapp-brown hover:bg-selapp-brown-dark text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg;
+  @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg;
 }
 
 .selapp-input {
-  @apply border-2 border-selapp-beige-dark rounded-xl px-4 py-3 focus:outline-none focus:border-selapp-brown focus:ring-2 focus:ring-selapp-brown/20 transition-all;
+  @apply border border-input bg-background text-foreground rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-all;
 }
 
-/* Estilos para contenido con formato (prose) */
+/* Estilos para contenido con formato (prose) adaptados a temas */
 .prose-selapp {
   line-height: 1.7;
 }
 
 .prose-selapp strong {
-  @apply font-bold text-selapp-brown-dark;
+  @apply font-bold text-foreground;
 }
 
 .prose-selapp em {
@@ -70,16 +131,16 @@ html {
 
 .prose-selapp u {
   text-decoration: underline;
-  text-decoration-color: theme('colors.selapp.brown');
+  text-decoration-color: hsl(var(--primary));
   text-underline-offset: 2px;
 }
 
 .prose-selapp h3 {
-  @apply text-lg font-bold mb-2 mt-4 text-selapp-brown-dark;
+  @apply text-lg font-bold mb-2 mt-4 text-foreground;
 }
 
 .prose-selapp blockquote {
-  @apply border-l-4 border-selapp-brown/30 pl-4 italic my-3 text-selapp-brown-light;
+  @apply border-l-4 border-primary/40 pl-4 italic my-3 text-muted-foreground;
 }
 
 .prose-selapp li {
@@ -91,53 +152,52 @@ html {
   @apply mb-2;
 }
 
-/* Estilos para mensajes de chat (fondo verde claro) */
+/* Estilos para mensajes de chat / sermones */
 .prose-selapp-white strong {
-  @apply font-bold text-gray-800;
+  @apply font-bold text-foreground;
 }
 
 .prose-selapp-white em {
-  @apply italic text-gray-800;
+  @apply italic text-foreground;
 }
 
 .prose-selapp-white u {
   text-decoration: underline;
-  text-decoration-color: theme('colors.gray.800');
   text-underline-offset: 2px;
 }
 
 .prose-selapp-white h3 {
-  @apply text-lg font-bold mb-2 mt-2 text-gray-800;
+  @apply text-lg font-bold mb-2 mt-2 text-foreground;
 }
 
 .prose-selapp-white blockquote {
-  @apply border-l-4 border-gray-600 pl-4 italic my-2 text-gray-700;
+  @apply border-l-4 border-muted-foreground pl-4 italic my-2 text-muted-foreground;
 }
 
 .prose-selapp-white li {
-  @apply ml-6 my-1 text-gray-800;
+  @apply ml-6 my-1 text-foreground;
   list-style-type: disc;
 }
 
 /* Estilos para Tiptap Editor */
 .ProseMirror {
-  @apply focus:outline-none;
+  @apply focus:outline-none text-foreground;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: theme('colors.selapp.brown-light') / 50%;
+  color: hsl(var(--muted-foreground) / 0.6);
   pointer-events: none;
   height: 0;
 }
 
 .ProseMirror h3 {
-  @apply text-xl font-bold text-selapp-brown-dark mb-2 mt-4;
+  @apply text-xl font-bold text-foreground mb-2 mt-4;
 }
 
 .ProseMirror blockquote {
-  @apply border-l-4 border-selapp-brown/30 pl-4 italic my-3 text-selapp-brown-light bg-selapp-beige/20 py-2 rounded-r;
+  @apply border-l-4 border-primary/40 pl-4 italic my-3 text-muted-foreground bg-muted/30 py-2 rounded-r;
 }
 
 .ProseMirror ul {
@@ -149,7 +209,7 @@ html {
 }
 
 .ProseMirror strong {
-  @apply font-bold text-selapp-brown-dark;
+  @apply font-bold text-foreground;
 }
 
 .ProseMirror em {
@@ -158,12 +218,10 @@ html {
 
 .ProseMirror u {
   text-decoration: underline;
-  text-decoration-color: theme('colors.selapp.brown');
+  text-decoration-color: hsl(var(--primary));
   text-underline-offset: 2px;
 }
 
 .ProseMirror p {
   @apply mb-2;
 }
-
-/* Estilos para contenido de la Biblia - ahora usa scripture-styles completo */

@@ -3,52 +3,6 @@
 import { useEffect, useCallback } from "react";
 
 export default function PushNotifications() {
-  const registerServiceWorker = useCallback(async () => {
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registrado:", registration);
-
-      // Solicitar permiso para notificaciones
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        await subscribeToPush(registration);
-      }
-    } catch (error) {
-      console.error("Error al registrar Service Worker:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      registerServiceWorker();
-    }
-  }, [registerServiceWorker]);
-
-  async function subscribeToPush(registration: ServiceWorkerRegistration) {
-    try {
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""
-        ),
-      });
-
-      // Enviar suscripción al servidor
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: "user-id-placeholder", // TODO: usar usuario autenticado
-          subscription,
-        }),
-      });
-
-      console.log("Suscrito a notificaciones push");
-    } catch (error) {
-      console.error("Error al suscribirse a push:", error);
-    }
-  }
-
   function urlBase64ToUint8Array(base64String: string) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -63,6 +17,52 @@ export default function PushNotifications() {
     }
     return outputArray;
   }
+
+  const subscribeToPush = useCallback(async (registration: ServiceWorkerRegistration) => {
+    try {
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""
+        ),
+      });
+
+      // Enviar suscripción al servidor
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "user-id-placeholder",
+          subscription,
+        }),
+      });
+
+      console.log("Suscrito a notificaciones push");
+    } catch (error) {
+      console.error("Error al suscribirse a push:", error);
+    }
+  }, []);
+
+  const registerServiceWorker = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registrado:", registration);
+
+      // Solicitar permiso para notificaciones
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        await subscribeToPush(registration);
+      }
+    } catch (error) {
+      console.error("Error al registrar Service Worker:", error);
+    }
+  }, [subscribeToPush]);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      registerServiceWorker();
+    }
+  }, [registerServiceWorker]);
 
   return null;
 }

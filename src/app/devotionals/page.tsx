@@ -74,9 +74,17 @@ export default function DevotionalsPage() {
         </Link>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <span className="text-2xl animate-spin">⏳</span>
-            <span className="ml-3 text-selapp-brown dark:text-selapp-beige">Cargando...</span>
+          <div className="space-y-6 py-6 animate-pulse">
+            <div className="bg-white dark:bg-card rounded-2xl p-8 border border-border space-y-4">
+              <div className="h-6 w-48 bg-muted rounded-md mx-auto" />
+              <div className="h-4 w-32 bg-muted/60 rounded-md mx-auto" />
+              <div className="h-16 w-full bg-muted/70 rounded-xl" />
+            </div>
+            <div className="bg-white dark:bg-card rounded-2xl p-8 border border-border space-y-4">
+              <div className="h-8 w-44 bg-muted rounded-md mx-auto" />
+              <div className="h-20 w-full bg-muted/70 rounded-xl" />
+              <div className="h-20 w-full bg-muted/70 rounded-xl" />
+            </div>
           </div>
         ) : (
           <>

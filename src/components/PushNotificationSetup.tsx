@@ -1,7 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export default function PushNotificationSetup() {
   const { data: session } = useSession();
@@ -9,97 +20,7 @@ export default function PushNotificationSetup() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
-  useEffect(() => {
-    if (!session) return;
-
-    // Verificar soporte de notificaciones
-    if (!("Notification" in window)) {
-      console.log("Este navegador no soporta notificaciones");
-      return;
-    }
-
-    setPermission(Notification.permission);
-
-    // Registrar service worker
-    if ("serviceWorker" in navigator) {
-      registerServiceWorker();
-    }
-
-    // Renovar suscripción cada vez que se carga la app si ya hay permiso
-    if (Notification.permission === "granted") {
-      renewSubscriptionIfNeeded();
-    }
-
-    // Mostrar prompt después de 3 segundos si no han dado permiso
-    if (Notification.permission === "default") {
-      const timer = setTimeout(() => {
-        setShowPrompt(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [session]);
-
-  const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register("/service-worker.js", {
-        scope: "/"
-      });
-      
-      await navigator.serviceWorker.ready;
-      console.log("✅ Service Worker registrado y activo:", registration);
-
-      // Verificar si ya está suscrito
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-
-      // Si tiene permiso y no está suscrito, suscribir automáticamente
-      if (Notification.permission === "granted" && !subscription) {
-        await subscribeToPush(registration);
-      }
-    } catch (error) {
-      console.error("❌ Error registrando Service Worker:", error);
-    }
-  };
-
-  const renewSubscriptionIfNeeded = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      let subscription = await registration.pushManager.getSubscription();
-      
-      if (!subscription) {
-        console.log("⚠️ No hay suscripción, creando una nueva...");
-        await subscribeToPush(registration);
-      } else {
-        // Verificar si la suscripción es válida en el servidor
-        const checkResponse = await fetch("/api/push/check", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
-        });
-        
-        if (!checkResponse.ok || !(await checkResponse.json()).exists) {
-          console.log("⚠️ Suscripción no válida en servidor, renovando...");
-          await subscription.unsubscribe();
-          await subscribeToPush(registration);
-        } else {
-          console.log("✅ Suscripción activa y válida");
-        }
-      }
-    } catch (error) {
-      console.error("Error verificando suscripción:", error);
-      // Si hay error, intentar crear nueva suscripción
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const oldSub = await registration.pushManager.getSubscription();
-        if (oldSub) await oldSub.unsubscribe();
-        await subscribeToPush(registration);
-      } catch (e) {
-        console.error("Error renovando suscripción:", e);
-      }
-    }
-  };
-
-  const subscribeToPush = async (registration: ServiceWorkerRegistration) => {
+  const subscribeToPush = useCallback(async (registration: ServiceWorkerRegistration) => {
     try {
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       
@@ -137,7 +58,96 @@ export default function PushNotificationSetup() {
     } catch (error) {
       console.error("❌ Error suscribiendo a push:", error);
     }
-  };
+  }, []);
+
+  const registerServiceWorker = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/service-worker.js", {
+        scope: "/"
+      });
+      
+      await navigator.serviceWorker.ready;
+      console.log("✅ Service Worker registrado y activo:", registration);
+
+      // Verificar si ya está suscrito
+      const subscription = await registration.pushManager.getSubscription();
+      setIsSubscribed(!!subscription);
+
+      // Si tiene permiso y no está suscrito, suscribir automáticamente
+      if (Notification.permission === "granted" && !subscription) {
+        await subscribeToPush(registration);
+      }
+    } catch (error) {
+      console.error("❌ Error registrando Service Worker:", error);
+    }
+  }, [subscribeToPush]);
+
+  const renewSubscriptionIfNeeded = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        console.log("⚠️ No hay suscripción, creando una nueva...");
+        await subscribeToPush(registration);
+      } else {
+        // Verificar si la suscripción es válida en el servidor
+        const checkResponse = await fetch("/api/push/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+        
+        if (!checkResponse.ok || !(await checkResponse.json()).exists) {
+          console.log("⚠️ Suscripción no válida en servidor, renovando...");
+          await subscription.unsubscribe();
+          await subscribeToPush(registration);
+        } else {
+          console.log("✅ Suscripción activa y válida");
+        }
+      }
+    } catch (error) {
+      console.error("Error verificando suscripción:", error);
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const oldSub = await registration.pushManager.getSubscription();
+        if (oldSub) await oldSub.unsubscribe();
+        await subscribeToPush(registration);
+      } catch (e) {
+        console.error("Error renovando suscripción:", e);
+      }
+    }
+  }, [subscribeToPush]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    // Verificar soporte de notificaciones
+    if (!("Notification" in window)) {
+      console.log("Este navegador no soporta notificaciones");
+      return;
+    }
+
+    setPermission(Notification.permission);
+
+    // Registrar service worker
+    if ("serviceWorker" in navigator) {
+      registerServiceWorker();
+    }
+
+    // Renovar suscripción cada vez que se carga la app si ya hay permiso
+    if (Notification.permission === "granted") {
+      renewSubscriptionIfNeeded();
+    }
+
+    // Mostrar prompt después de 3 segundos si no han dado permiso
+    if (Notification.permission === "default") {
+      const timer = setTimeout(() => {
+        setShowPrompt(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [session, registerServiceWorker, renewSubscriptionIfNeeded]);
 
   const requestPermission = async () => {
     try {
@@ -158,26 +168,15 @@ export default function PushNotificationSetup() {
     }
   };
 
-  const urlBase64ToUint8Array = (base64String: string) => {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
   if (!session || !showPrompt || permission === "granted") {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-white rounded-xl shadow-2xl border-2 border-selapp-accent p-6 animate-slide-up">
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-white dark:bg-card rounded-xl shadow-2xl border-2 border-selapp-accent p-6 animate-slide-up">
       <button
         onClick={() => setShowPrompt(false)}
-        className="absolute top-2 right-2 text-selapp-brown/60 hover:text-selapp-brown text-xl"
+        className="absolute top-2 right-2 text-selapp-brown/60 dark:text-muted-foreground hover:text-selapp-brown text-xl"
       >
         ✕
       </button>
@@ -185,10 +184,10 @@ export default function PushNotificationSetup() {
       <div className="flex items-start gap-4">
         <div className="text-4xl">🔔</div>
         <div className="flex-1">
-          <h3 className="font-bold text-selapp-brown mb-2">
+          <h3 className="font-bold text-selapp-brown dark:text-foreground mb-2">
             ¿Activar notificaciones?
           </h3>
-          <p className="text-sm text-selapp-brown/70 mb-4">
+          <p className="text-sm text-selapp-brown/70 dark:text-muted-foreground mb-4">
             Recibe avisos del versículo del día, recordatorios y logros directamente en tu dispositivo
           </p>
           <div className="flex gap-2">
@@ -200,7 +199,7 @@ export default function PushNotificationSetup() {
             </button>
             <button
               onClick={() => setShowPrompt(false)}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-gray-200 dark:bg-muted hover:bg-gray-300 dark:hover:bg-muted/80 text-gray-700 dark:text-foreground font-semibold py-2 px-4 rounded-lg transition-colors"
             >
               Ahora no
             </button>

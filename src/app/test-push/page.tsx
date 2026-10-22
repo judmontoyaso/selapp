@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function TestPushPage() {
     const { data: session } = useSession();
@@ -9,19 +11,14 @@ export default function TestPushPage() {
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [loading, setLoading] = useState(false);
     const [log, setLog] = useState<string[]>([]);
+    const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && "Notification" in window) {
-            setPermission(Notification.permission);
-            checkSubscription();
-        }
+    const addLog = useCallback((msg: string) => {
+        setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
     }, []);
 
-    const addLog = (msg: string) => {
-        setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
-    };
-
-    const checkSubscription = async () => {
+    const checkSubscription = useCallback(async () => {
         if ("serviceWorker" in navigator) {
             const registration = await navigator.serviceWorker.ready;
             const sub = await registration.pushManager.getSubscription();
@@ -32,7 +29,14 @@ export default function TestPushPage() {
                 addLog("⚠️ No hay suscripción activa");
             }
         }
-    };
+    }, [addLog]);
+
+    useEffect(() => {
+        if (typeof window !== "undefined" && "Notification" in window) {
+            setPermission(Notification.permission);
+            checkSubscription();
+        }
+    }, [checkSubscription]);
 
     const requestPermission = async () => {
         try {
@@ -133,6 +137,29 @@ export default function TestPushPage() {
         return outputArray;
     };
 
+    const handleResetSubscriptions = async () => {
+        setResetting(true);
+        try {
+            const res = await fetch("/api/push/reset", { method: "POST" });
+            const data = await res.json();
+            if (res.ok) {
+                addLog(`✅ ${data.message}`);
+                toast.success(data.message || "Suscripciones reseteadas");
+                if (subscription) await subscription.unsubscribe();
+                setSubscription(null);
+            } else {
+                addLog(`❌ Error: ${data.error}`);
+                toast.error(data.error || "Error al resetear suscripciones");
+            }
+        } catch (e: any) {
+            addLog(`❌ Error: ${e}`);
+            toast.error(e?.message || "Error al resetear suscripciones");
+        } finally {
+            setResetting(false);
+            setConfirmResetOpen(false);
+        }
+    };
+
     if (!session) {
         return <div className="p-8">Debes iniciar sesión para probar notificaciones.</div>;
     }
@@ -202,25 +229,8 @@ export default function TestPushPage() {
                         </button>
 
                         <button
-                            onClick={async () => {
-                                if (!confirm("¿Estás seguro? Esto borrará todas tus suscripciones.")) return;
-                                setLoading(true);
-                                try {
-                                    const res = await fetch("/api/push/reset", { method: "POST" });
-                                    const data = await res.json();
-                                    if (res.ok) {
-                                        addLog(`✅ ${data.message}`);
-                                        if (subscription) await subscription.unsubscribe();
-                                        setSubscription(null);
-                                    } else {
-                                        addLog(`❌ Error: ${data.error}`);
-                                    }
-                                } catch (e) {
-                                    addLog(`❌ Error: ${e}`);
-                                } finally {
-                                    setLoading(false);
-                                }
-                            }}
+                            onClick={() => setConfirmResetOpen(true)}
+                            disabled={loading || resetting}
                             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:opacity-50"
                         >
                             Resetear Todo
@@ -234,6 +244,16 @@ export default function TestPushPage() {
                             <div key={i}>{l}</div>
                         ))}
                     </div>
+                    <ConfirmDialog
+                        open={confirmResetOpen}
+                        onOpenChange={setConfirmResetOpen}
+                        title="Resetear suscripciones"
+                        description="¿Estás seguro? Esto borrará todas tus suscripciones."
+                        confirmLabel="Resetear"
+                        variant="destructive"
+                        loading={resetting}
+                        onConfirm={handleResetSubscriptions}
+                    />
                 </div>
             </div>
         </div>

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Notification {
   id: string;
@@ -23,6 +25,8 @@ export default function NotificationsPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -30,13 +34,7 @@ export default function NotificationsPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session) {
-      fetchNotifications();
-    }
-  }, [session, filter]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const url = filter === "unread" 
@@ -54,7 +52,13 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    if (session) {
+      fetchNotifications();
+    }
+  }, [session, fetchNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -106,9 +110,12 @@ export default function NotificationsPage() {
     }
   };
 
-  const deleteAllRead = async () => {
-    if (!confirm("¿Eliminar todas las notificaciones leídas?")) return;
+  const deleteAllRead = () => {
+    setConfirmClearOpen(true);
+  };
 
+  const confirmDeleteAllRead = async () => {
+    setClearing(true);
     try {
       const response = await fetch("/api/notifications?all=true", {
         method: "DELETE",
@@ -116,9 +123,16 @@ export default function NotificationsPage() {
 
       if (response.ok) {
         setNotifications((prev) => prev.filter((n) => !n.read));
+        toast.success("Notificaciones leídas eliminadas");
+      } else {
+        toast.error("Error al eliminar notificaciones");
       }
     } catch (error) {
       console.error("Error deleting notifications:", error);
+      toast.error("Error al eliminar notificaciones");
+    } finally {
+      setClearing(false);
+      setConfirmClearOpen(false);
     }
   };
 
@@ -312,6 +326,16 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={confirmClearOpen}
+        onOpenChange={setConfirmClearOpen}
+        title="Eliminar notificaciones"
+        description="¿Eliminar todas las notificaciones leídas?"
+        confirmLabel="Eliminar"
+        variant="destructive"
+        loading={clearing}
+        onConfirm={confirmDeleteAllRead}
+      />
     </div>
   );
 }

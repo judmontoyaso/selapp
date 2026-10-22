@@ -210,6 +210,12 @@ export default function Home() {
 
   const quickLinks = [
     {
+      href: "/devotionals",
+      icon: <FiSun className="w-5 h-5" />,
+      title: "Devocionales",
+      text: "Lectura y reflexión diaria",
+    },
+    {
       href: "/sermons",
       icon: <FiBookOpen className="w-5 h-5" />,
       title: "Sermones",
@@ -255,6 +261,36 @@ export default function Home() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Columna izquierda */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Tarjeta de Racha y Progreso de Lectura */}
+            <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-selapp-brown/10 dark:border-border p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
+                  🔥
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-base">
+                    Racha de lectura diaria
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Mantén tu constancia espiritual diaria en tus devocionales y progreso
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="text-center">
+                  <span className="block text-xl font-bold text-foreground">5 días</span>
+                  <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Racha actual</span>
+                </div>
+                <div className="h-8 w-px bg-border" />
+                <Link
+                  href="/devotionals"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Continuar lectura
+                </Link>
+              </div>
+            </div>
+
             <VerseOfTheDay />
             <SermonCounter />
 
