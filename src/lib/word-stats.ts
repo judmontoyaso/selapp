@@ -49,6 +49,19 @@ const STOPWORDS_ES = new Set([
   "capítulo", "capitulo", "versículo", "versiculo", "vers", "dice", "texto",
 ]);
 
+// Versiones bíblicas y abreviaturas comunes que NO deben figurar en la nube de palabras
+export const BIBLE_VERSIONS = new Set([
+  // Siglas en español
+  "nvi", "ntv", "rvr", "rv", "rv60", "rvr60", "rv1960", "rvr1960", "rv95", "rvr95", "rv1909", "rvr1909",
+  "dhh", "tla", "lbla", "nbla", "nblh", "btx", "nbv", "pdt", "bj", "bbla", "bla", "nbj",
+  "vulgata", "septuaginta",
+  // Siglas comunes en inglés / traducciones
+  "kjv", "nkjv", "esv", "nasb", "niv", "amp", "csb", "msg", "nrsv", "nlt",
+  // Palabras genéricas sobre versiones
+  "version", "versión", "versiones", "traduccion", "traducción", "traducciones",
+  "valera", "reina",
+]);
+
 export interface WordCount {
   text: string;
   count: number;
@@ -87,6 +100,7 @@ export function wordFrequencies(text: string, limit = 80, exclude?: Set<string>)
   for (const token of tokens) {
     if (token.length < 3 && !shortWhitelist.has(token)) continue;
     if (STOPWORDS_ES.has(token)) continue;
+    if (BIBLE_VERSIONS.has(token)) continue;
     if (exclude?.has(token)) continue;
     counts.set(token, (counts.get(token) ?? 0) + 1);
   }
