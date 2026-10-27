@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { ensureApiKeyTable } from "@/lib/api-key-db";
 import crypto from "crypto";
 
-export const VALID_MCP_PERMISSIONS = ["read", "write", "delete"] as const;
-export type McpPermission = (typeof VALID_MCP_PERMISSIONS)[number];
+const VALID_MCP_PERMISSIONS = ["read", "write", "delete"] as const;
+type McpPermission = (typeof VALID_MCP_PERMISSIONS)[number];
 
 function sanitizePermissions(input: unknown): string[] {
   if (!Array.isArray(input)) {

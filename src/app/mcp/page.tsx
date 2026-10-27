@@ -24,7 +24,7 @@ import {
   BookOpen,
 } from "lucide-react";
 
-export type McpPermScope = "read" | "write" | "delete";
+type McpPermScope = "read" | "write" | "delete";
 
 interface ApiKeyItem {
   id: string;

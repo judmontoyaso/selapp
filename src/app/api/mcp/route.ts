@@ -12,7 +12,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, x-mcp-key, x-user-email, Accept",
 };
 
-export type McpPermissionScope = "read" | "write" | "delete";
+type McpPermissionScope = "read" | "write" | "delete";
 
 // Mapa de permisos requeridos por cada herramienta MCP
 const TOOL_PERMISSION_MAP: Record<string, McpPermissionScope> = {
