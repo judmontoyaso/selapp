@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { stripHtml, extractReferences, BOOK_NAME_WORDS } from "@/lib/verse-extract";
 import { wordFrequencies } from "@/lib/word-stats";
 import { autoLinkBibleVerses } from "@/lib/youversion";
+import { ensureApiKeyTable } from "@/lib/api-key-db";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -186,68 +187,112 @@ const MCP_RESOURCES = [
   },
 ];
 
-// Autenticación por Bearer token, query param o API key header
-function authenticateRequest(req: Request): boolean {
-  const configuredKey = process.env.MCP_API_KEY || process.env.SELAPP_MCP_KEY;
-  // Si no hay clave configurada en las variables de entorno, se permite acceso abierto
-  if (!configuredKey || configuredKey.trim() === "") {
-    return true;
-  }
-
+// Extrae el token de autenticación desde Header Authorization, x-api-key o Query Params
+function extractToken(req: Request): string | null {
   const authHeader = req.headers.get("authorization");
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    if (authHeader.substring(7).trim() === configuredKey.trim()) return true;
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    const token = authHeader.substring(7).trim();
+    if (token) return token;
   }
 
   const apiKeyHeader = req.headers.get("x-api-key") || req.headers.get("x-mcp-key");
-  if (apiKeyHeader && apiKeyHeader.trim() === configuredKey.trim()) return true;
+  if (apiKeyHeader && apiKeyHeader.trim()) {
+    return apiKeyHeader.trim();
+  }
 
   const url = new URL(req.url);
-  const queryKey = url.searchParams.get("apiKey") || url.searchParams.get("key") || url.searchParams.get("token");
-  if (queryKey && queryKey.trim() === configuredKey.trim()) return true;
+  const queryKey =
+    url.searchParams.get("apiKey") ||
+    url.searchParams.get("key") ||
+    url.searchParams.get("token");
+  if (queryKey && queryKey.trim()) {
+    return queryKey.trim();
+  }
 
-  return false;
+  return null;
 }
 
-// Resuelve el usuario sobre el que operará el MCP
-async function resolveUser(req: Request): Promise<{ id: string; email: string } | null> {
+// Resuelve un usuario de respaldo para la clave maestra de entorno (retrocompatibilidad)
+async function resolveLegacyEnvUser(req: Request): Promise<{ id: string; email: string; name?: string | null; keyName?: string } | null> {
   const url = new URL(req.url);
 
-  // 1. Query parameter (?email=... o ?userEmail=...)
   const queryEmail = url.searchParams.get("email") || url.searchParams.get("userEmail");
   if (queryEmail) {
     const user = await prisma.user.findUnique({
       where: { email: queryEmail.trim() },
-      select: { id: true, email: true },
+      select: { id: true, email: true, name: true },
     });
-    if (user) return user;
+    if (user) return { ...user, keyName: "Env Master Key" };
   }
 
-  // 2. Header explícito
   const headerEmail = req.headers.get("x-user-email");
   if (headerEmail) {
     const user = await prisma.user.findUnique({
       where: { email: headerEmail.trim() },
-      select: { id: true, email: true },
+      select: { id: true, email: true, name: true },
     });
-    if (user) return user;
+    if (user) return { ...user, keyName: "Env Master Key" };
   }
 
-  // 3. Variable de entorno opcional MCP_USER_EMAIL
   const envEmail = process.env.MCP_USER_EMAIL;
   if (envEmail) {
     const user = await prisma.user.findUnique({
       where: { email: envEmail.trim() },
-      select: { id: true, email: true },
+      select: { id: true, email: true, name: true },
     });
-    if (user) return user;
+    if (user) return { ...user, keyName: "Env Master Key" };
   }
 
-  // 4. Fallback al primer usuario registrado
-  return prisma.user.findFirst({
-    select: { id: true, email: true },
+  const firstUser = await prisma.user.findFirst({
+    select: { id: true, email: true, name: true },
     orderBy: { email: "asc" },
   });
+  return firstUser ? { ...firstUser, keyName: "Env Master Key" } : null;
+}
+
+// Autentica la petición validando primero la API Key dinámica por usuario en BD
+async function authenticateAndResolveUser(
+  req: Request
+): Promise<{ id: string; email: string; name?: string | null; keyName?: string } | null> {
+  const token = extractToken(req);
+
+  if (token) {
+    await ensureApiKeyTable();
+    // 1. Validar API Key dinámica por usuario en la tabla ApiKey
+    const apiKeyRecord = await prisma.apiKey.findUnique({
+      where: { key: token },
+      include: {
+        user: {
+          select: { id: true, email: true, name: true },
+        },
+      },
+    });
+
+    if (apiKeyRecord && apiKeyRecord.isActive && apiKeyRecord.user) {
+      // Actualizar timestamp de último uso sin bloquear la respuesta
+      prisma.apiKey
+        .update({
+          where: { id: apiKeyRecord.id },
+          data: { lastUsedAt: new Date() },
+        })
+        .catch(() => {});
+
+      return {
+        id: apiKeyRecord.user.id,
+        email: apiKeyRecord.user.email,
+        name: apiKeyRecord.user.name,
+        keyName: apiKeyRecord.name,
+      };
+    }
+
+    // 2. Retrocompatibilidad opcional con variable de entorno global MCP_API_KEY
+    const configuredEnvKey = process.env.MCP_API_KEY || process.env.SELAPP_MCP_KEY;
+    if (configuredEnvKey && configuredEnvKey.trim() !== "" && token === configuredEnvKey.trim()) {
+      return resolveLegacyEnvUser(req);
+    }
+  }
+
+  return null;
 }
 
 // Ejecutor de Tools
@@ -598,9 +643,9 @@ async function handleJsonRpc(req: Request, body: any, userId: string) {
             },
             serverInfo: {
               name: "selapp-sermons-mcp",
-              version: "1.0.0",
+              version: "1.1.0",
             },
-            instructions: "Servidor MCP para gestión y consulta de notas de predicación y sermones en Selapp.",
+            instructions: "Servidor MCP multi-usuario para gestión y consulta de notas de predicación y sermones en Selapp.",
           },
         };
 
@@ -732,32 +777,20 @@ export async function OPTIONS() {
 
 // POST: Maneja peticiones JSON-RPC directas o flujo HTTP del MCP
 export async function POST(request: Request) {
-  if (!authenticateRequest(request)) {
-    return NextResponse.json(
-      {
-        jsonrpc: "2.0",
-        id: null,
-        error: {
-          code: -32000,
-          message: "No autorizado. Provee el header Authorization: Bearer <MCP_API_KEY> o el parámetro ?apiKey=...",
-        },
-      },
-      { status: 401, headers: CORS_HEADERS }
-    );
-  }
+  const user = await authenticateAndResolveUser(request);
 
-  const user = await resolveUser(request);
   if (!user) {
     return NextResponse.json(
       {
         jsonrpc: "2.0",
         id: null,
         error: {
-          code: -32001,
-          message: "Usuario no encontrado en la base de datos para asociar los sermones.",
+          code: -32000,
+          message:
+            "No autorizado. Genera tu API Key personal en Selapp (/mcp) y envíala en la URL (?apiKey=sel_live_...) o en el header Authorization: Bearer <API_KEY>.",
         },
       },
-      { status: 404, headers: CORS_HEADERS }
+      { status: 401, headers: CORS_HEADERS }
     );
   }
 
@@ -795,11 +828,14 @@ export async function POST(request: Request) {
 // GET: Soporta SSE (Server-Sent Events) estándar para clientes MCP que usan transporte SSE,
 // o devuelve status/documentación si es consultado vía navegador/REST.
 export async function GET(request: Request) {
-  if (!authenticateRequest(request)) {
+  const user = await authenticateAndResolveUser(request);
+
+  if (!user) {
     return NextResponse.json(
       {
         error: "No autorizado",
-        message: "Configura MCP_API_KEY en variables de entorno y envíala en el header Authorization o query param apiKey.",
+        message:
+          "Genera tu clave personal en Selapp (/mcp) y usa tu enlace dinámico (/api/mcp?apiKey=sel_live_...) o el header Authorization: Bearer <API_KEY>.",
       },
       { status: 401, headers: CORS_HEADERS }
     );
@@ -834,8 +870,13 @@ export async function GET(request: Request) {
     {
       status: "online",
       server: "selapp-sermons-mcp",
-      version: "1.0.0",
-      description: "Servidor MCP para Sermones y Notas de Predicación de Selapp (Vercel Serverless Ready)",
+      version: "1.1.0",
+      description: "Servidor MCP multi-usuario para Sermones y Notas de Predicación de Selapp",
+      authenticatedUser: {
+        email: user.email,
+        name: user.name || undefined,
+        keyName: user.keyName,
+      },
       endpoint: "/api/mcp",
       supportedTransports: ["HTTP JSON-RPC 2.0 (POST)", "Server-Sent Events (GET)"],
       toolsCount: MCP_TOOLS.length,

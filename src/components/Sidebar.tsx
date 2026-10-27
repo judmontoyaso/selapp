@@ -14,6 +14,7 @@ import {
   Sun,
   BarChart2,
   Bell,
+  Key,
   X,
   LogOut,
 } from "lucide-react";
@@ -75,6 +76,7 @@ export default function Sidebar() {
     { href: "/notes", icon: BookText, label: "Diario Espiritual" },
     { href: "/sermons/insights", icon: BarChart2, label: "Estadísticas" },
     { href: "/notifications", icon: Bell, label: "Notificaciones", badge: unreadCount },
+    { href: "/mcp", icon: Key, label: "Conexión MCP" },
   ];
 
   const isActive = (path: string) => {

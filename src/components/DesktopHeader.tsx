@@ -24,6 +24,7 @@ import {
   Search,
   BarChart2,
   Bell,
+  Key,
   Menu,
   LogOut,
 } from "lucide-react";
@@ -147,6 +148,12 @@ export default function DesktopHeader() {
               <Link href="/notifications" className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground hover:bg-muted cursor-pointer">
                 <Bell className="w-4 h-4 text-muted-foreground" />
                 <span>Notificaciones</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/mcp" className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-foreground hover:bg-muted cursor-pointer">
+                <Key className="w-4 h-4 text-muted-foreground" />
+                <span>Conexión MCP</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
