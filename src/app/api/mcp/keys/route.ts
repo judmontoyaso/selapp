@@ -5,6 +5,27 @@ import { prisma } from "@/lib/prisma";
 import { ensureApiKeyTable } from "@/lib/api-key-db";
 import crypto from "crypto";
 
+export const VALID_MCP_PERMISSIONS = ["read", "write", "delete"] as const;
+export type McpPermission = (typeof VALID_MCP_PERMISSIONS)[number];
+
+function sanitizePermissions(input: unknown): string[] {
+  if (!Array.isArray(input)) {
+    return ["read", "write"];
+  }
+  const filtered = input
+    .map((p) => String(p).trim().toLowerCase())
+    .filter((p): p is McpPermission =>
+      (VALID_MCP_PERMISSIONS as readonly string[]).includes(p)
+    );
+
+  const unique = Array.from(new Set(filtered));
+  // Asegurar que al menos tenga permiso de lectura ("read")
+  if (!unique.includes("read")) {
+    unique.unshift("read");
+  }
+  return unique;
+}
+
 function generateApiKey(): string {
   return `sel_live_${crypto.randomBytes(24).toString("hex")}`;
 }
@@ -20,7 +41,7 @@ async function getAuthenticatedUser() {
   });
 }
 
-// GET /api/mcp/keys — Lista las claves MCP del usuario actual
+// GET /api/mcp/keys — Lista las claves MCP del usuario actual con sus permisos
 export async function GET() {
   try {
     const user = await getAuthenticatedUser();
@@ -35,6 +56,7 @@ export async function GET() {
         id: true,
         name: true,
         key: true,
+        permissions: true,
         createdAt: true,
         lastUsedAt: true,
         isActive: true,
@@ -43,7 +65,13 @@ export async function GET() {
 
     return NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name },
-      keys,
+      keys: keys.map((k) => ({
+        ...k,
+        permissions:
+          Array.isArray(k.permissions) && k.permissions.length > 0
+            ? k.permissions
+            : ["read", "write"],
+      })),
     });
   } catch (error: any) {
     console.error("Error fetching MCP keys:", error);
@@ -54,7 +82,7 @@ export async function GET() {
   }
 }
 
-// POST /api/mcp/keys — Genera una nueva clave MCP o regenera una existente
+// POST /api/mcp/keys — Genera una nueva clave MCP (con permisos) o regenera una existente
 export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -65,6 +93,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const name = (body.name as string)?.trim() || "MCP Personal";
     const regenerateId = (body.regenerateId as string)?.trim();
+    const permissions = sanitizePermissions(body.permissions);
 
     const newKeyValue = generateApiKey();
 
@@ -93,7 +122,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ apiKey: updated });
     }
 
-    // Limitar a un máximo razonable de claves activas por usuario (ej. 10)
     const count = await prisma.apiKey.count({
       where: { userId: user.id },
     });
@@ -108,6 +136,7 @@ export async function POST(request: Request) {
       data: {
         key: newKeyValue,
         name,
+        permissions,
         userId: user.id,
         isActive: true,
       },
@@ -118,6 +147,64 @@ export async function POST(request: Request) {
     console.error("Error creating/regenerating MCP key:", error);
     return NextResponse.json(
       { error: "Error al generar la clave MCP" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/mcp/keys — Actualiza en vivo los permisos o el nombre de una clave sin cambiar su token
+export async function PATCH(request: Request) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const keyId = (body.id as string)?.trim();
+
+    if (!keyId) {
+      return NextResponse.json(
+        { error: "Se requiere el ID de la clave" },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.apiKey.findFirst({
+      where: { id: keyId, userId: user.id },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Clave no encontrada" },
+        { status: 404 }
+      );
+    }
+
+    const updateData: { permissions?: string[]; name?: string; isActive?: boolean } = {};
+
+    if (body.permissions !== undefined) {
+      updateData.permissions = sanitizePermissions(body.permissions);
+    }
+
+    if (typeof body.name === "string" && body.name.trim()) {
+      updateData.name = body.name.trim();
+    }
+
+    if (typeof body.isActive === "boolean") {
+      updateData.isActive = body.isActive;
+    }
+
+    const updated = await prisma.apiKey.update({
+      where: { id: existing.id },
+      data: updateData,
+    });
+
+    return NextResponse.json({ apiKey: updated });
+  } catch (error: any) {
+    console.error("Error updating MCP key permissions:", error);
+    return NextResponse.json(
+      { error: "Error al actualizar los permisos de la clave MCP" },
       { status: 500 }
     );
   }

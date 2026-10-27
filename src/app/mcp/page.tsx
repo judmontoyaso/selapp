@@ -19,26 +19,101 @@ import {
   Clock,
   Server,
   ChevronRight,
+  Lock,
+  PenLine,
+  BookOpen,
 } from "lucide-react";
+
+export type McpPermScope = "read" | "write" | "delete";
 
 interface ApiKeyItem {
   id: string;
   name: string;
   key: string;
+  permissions: string[];
   createdAt: string;
   lastUsedAt: string | null;
   isActive: boolean;
 }
 
-const MCP_TOOLS_SUMMARY = [
-  { name: "list_sermons", desc: "Lista y filtra tus sermones por título, predicador o contenido" },
-  { name: "get_sermon", desc: "Obtiene el detalle completo y todas las notas de un sermón" },
-  { name: "create_sermon", desc: "Crea un nuevo sermón con notas iniciales y vinculación bíblica" },
-  { name: "add_sermon_note", desc: "Añade apuntes a un sermón existente con detección de citas" },
-  { name: "update_sermon", desc: "Actualiza título, predicador o fecha de un sermón" },
-  { name: "delete_sermon", desc: "Elimina un sermón de tu cuenta" },
-  { name: "get_sermon_insights", desc: "Calcula estadísticas de libros, versículos y palabras frecuentes" },
-  { name: "search_sermon_notes", desc: "Búsqueda semántica/textual en todos tus apuntes de prédicas" },
+const PERMISSION_DEFINITIONS: {
+  id: McpPermScope;
+  label: string;
+  description: string;
+  required?: boolean;
+}[] = [
+  {
+    id: "read",
+    label: "Lectura",
+    description: "Consultar sermones, notas y estadísticas",
+    required: true,
+  },
+  {
+    id: "write",
+    label: "Escritura",
+    description: "Crear sermones, añadir apuntes y editar",
+  },
+  {
+    id: "delete",
+    label: "Eliminación",
+    description: "Borrar sermones permanentemente",
+  },
+];
+
+const MCP_TOOLS_SUMMARY: {
+  name: string;
+  desc: string;
+  scope: McpPermScope;
+  scopeLabel: string;
+}[] = [
+  {
+    name: "list_sermons",
+    desc: "Lista y filtra tus sermones por título, predicador o contenido",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
+    name: "get_sermon",
+    desc: "Obtiene el detalle completo y todas las notas de un sermón",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
+    name: "get_sermon_insights",
+    desc: "Calcula estadísticas de libros, versículos y palabras frecuentes",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
+    name: "search_sermon_notes",
+    desc: "Búsqueda textual en todos tus apuntes de prédicas",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
+    name: "create_sermon",
+    desc: "Crea un nuevo sermón con notas iniciales y vinculación bíblica",
+    scope: "write",
+    scopeLabel: "Escritura",
+  },
+  {
+    name: "add_sermon_note",
+    desc: "Añade apuntes a un sermón existente con detección de citas",
+    scope: "write",
+    scopeLabel: "Escritura",
+  },
+  {
+    name: "update_sermon",
+    desc: "Actualiza título, predicador o fecha de un sermón",
+    scope: "write",
+    scopeLabel: "Escritura",
+  },
+  {
+    name: "delete_sermon",
+    desc: "Elimina un sermón y sus notas de tu cuenta",
+    scope: "delete",
+    scopeLabel: "Eliminación",
+  },
 ];
 
 export default function McpPage() {
@@ -49,7 +124,9 @@ export default function McpPage() {
   const [creating, setCreating] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingPermId, setUpdatingPermId] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyPermissions, setNewKeyPermissions] = useState<McpPermScope[]>(["read", "write"]);
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"url" | "json" | "headers">("url");
@@ -67,7 +144,13 @@ export default function McpPage() {
       const res = await fetch("/api/mcp/keys");
       if (!res.ok) throw new Error("No se pudieron cargar las claves");
       const data = await res.json();
-      const loadedKeys: ApiKeyItem[] = data.keys || [];
+      const loadedKeys: ApiKeyItem[] = (data.keys || []).map((k: ApiKeyItem) => ({
+        ...k,
+        permissions:
+          Array.isArray(k.permissions) && k.permissions.length > 0
+            ? k.permissions
+            : ["read", "write"],
+      }));
       setKeys(loadedKeys);
       if (loadedKeys.length > 0 && !selectedKeyId) {
         setSelectedKeyId(loadedKeys[0].id);
@@ -88,6 +171,13 @@ export default function McpPage() {
     }
   }, [status, fetchKeys]);
 
+  const toggleNewKeyPerm = (perm: McpPermScope) => {
+    if (perm === "read") return; // Lectura es siempre obligatoria
+    setNewKeyPermissions((prev) =>
+      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
+    );
+  };
+
   const handleCreateKey = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
@@ -97,22 +187,69 @@ export default function McpPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newKeyName.trim() || `MCP Personal ${keys.length + 1}`,
+          permissions: newKeyPermissions,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Error al crear la clave");
       }
-      const created: ApiKeyItem = data.apiKey;
+      const created: ApiKeyItem = {
+        ...data.apiKey,
+        permissions: data.apiKey.permissions || newKeyPermissions,
+      };
       setKeys((prev) => [created, ...prev]);
       setSelectedKeyId(created.id);
       setVisibleKeys((prev) => ({ ...prev, [created.id]: true }));
       setNewKeyName("");
-      toast.success("Clave y enlace MCP generados correctamente");
+      toast.success("Clave y enlace MCP generados con los permisos seleccionados");
     } catch (err: any) {
       toast.error(err.message || "No se pudo generar la clave");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleToggleKeyPermission = async (item: ApiKeyItem, perm: McpPermScope) => {
+    if (perm === "read") {
+      toast.info("El permiso de Lectura es la base mínima requerida para la conexión MCP.");
+      return;
+    }
+
+    const currentPerms = Array.isArray(item.permissions) ? item.permissions : ["read"];
+    const hasPerm = currentPerms.includes(perm);
+    const updatedPerms = hasPerm
+      ? currentPerms.filter((p) => p !== perm)
+      : [...currentPerms, perm];
+
+    try {
+      setUpdatingPermId(`${item.id}-${perm}`);
+      const res = await fetch("/api/mcp/keys", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: item.id,
+          permissions: updatedPerms,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al actualizar permisos");
+      }
+      const updatedKey: ApiKeyItem = {
+        ...data.apiKey,
+        permissions: data.apiKey.permissions || updatedPerms,
+      };
+      setKeys((prev) => prev.map((k) => (k.id === item.id ? updatedKey : k)));
+      toast.success(
+        `Permiso de ${perm === "write" ? "Escritura" : "Eliminación"} ${
+          hasPerm ? "desactivado" : "activado"
+        } para ${item.name}`
+      );
+    } catch (err: any) {
+      toast.error(err.message || "No se pudieron actualizar los permisos");
+    } finally {
+      setUpdatingPermId(null);
     }
   };
 
@@ -218,6 +355,11 @@ export default function McpPage() {
   }
 
   const activeKey = keys.find((k) => k.id === selectedKeyId) || keys[0] || null;
+  const activePermissions = activeKey?.permissions || ["read", "write"];
+  const allowedToolsCount = MCP_TOOLS_SUMMARY.filter((t) =>
+    activePermissions.includes(t.scope)
+  ).length;
+
   const dynamicMcpUrl = activeKey
     ? `${origin}/api/mcp?apiKey=${activeKey.key}`
     : `${origin}/api/mcp?apiKey=TU_CLAVE_API`;
@@ -247,24 +389,24 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
             <span>Model Context Protocol (MCP)</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Conexión MCP y Claves API por Usuario
+            Conexión MCP, Claves y Permisos por Usuario
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Conecta Claude Desktop, Cursor, Windsurf o cualquier cliente MCP directamente con tus propios sermones y notas.
+            Conecta Claude Desktop, Cursor o cualquier cliente MCP con tus sermones y controla qué acciones tiene permitidas cada clave.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-border bg-muted/40 text-xs font-medium text-foreground">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            <span>Cuenta vinculada: {session.user?.email}</span>
+            <span>Cuenta: {session.user?.email}</span>
           </span>
         </div>
       </div>
 
       {/* Sección Principal: Generador y Lista de Claves */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Columna Izquierda: Gestión de Claves del Usuario */}
+        {/* Columna Izquierda: Gestión de Claves y Permisos */}
         <div className="lg:col-span-5 space-y-4">
           <div className="border border-border bg-card p-5 rounded space-y-4">
             <div className="flex items-center justify-between">
@@ -277,22 +419,56 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
               </span>
             </div>
 
-            <form onSubmit={handleCreateKey} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Nombre (ej. Claude Desktop, Cursor)..."
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs bg-background border border-border rounded focus:outline-none focus:border-primary text-foreground placeholder:text-muted-foreground"
-              />
-              <button
-                type="submit"
-                disabled={creating}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3.5 py-2 rounded text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{creating ? "Creando..." : "Generar Clave"}</span>
-              </button>
+            {/* Formulario de Nueva Clave con Permisos */}
+            <form onSubmit={handleCreateKey} className="space-y-3 border-b border-border pb-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nombre (ej. Claude Solo Lectura, Cursor)..."
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  className="flex-1 px-3 py-2 text-xs bg-background border border-border rounded focus:outline-none focus:border-primary text-foreground placeholder:text-muted-foreground"
+                />
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3.5 py-2 rounded text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{creating ? "Creando..." : "Generar"}</span>
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-medium text-muted-foreground block">
+                  Permisos iniciales para la nueva clave:
+                </span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PERMISSION_DEFINITIONS.map((perm) => {
+                    const checked = newKeyPermissions.includes(perm.id);
+                    return (
+                      <button
+                        key={perm.id}
+                        type="button"
+                        onClick={() => toggleNewKeyPerm(perm.id)}
+                        title={perm.description}
+                        className={`px-2 py-1.5 rounded border text-[11px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                          checked
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border bg-background text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Check
+                          className={`w-3 h-3 ${
+                            checked ? "text-primary opacity-100" : "opacity-0"
+                          }`}
+                        />
+                        <span>{perm.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </form>
 
             {keys.length === 0 ? (
@@ -316,10 +492,14 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                 </button>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {keys.map((item) => {
                   const isSelected = activeKey?.id === item.id;
                   const isVisible = !!visibleKeys[item.id];
+                  const itemPerms = Array.isArray(item.permissions)
+                    ? item.permissions
+                    : ["read", "write"];
+
                   return (
                     <div
                       key={item.id}
@@ -342,18 +522,27 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="flex items-center gap-1 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <button
                             type="button"
                             onClick={() => toggleVisibility(item.id)}
                             className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors cursor-pointer"
                             title={isVisible ? "Ocultar clave" : "Mostrar clave"}
                           >
-                            {isVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            {isVisible ? (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5" />
+                            )}
                           </button>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(item.key, `key-${item.id}`, "Clave API")}
+                            onClick={() =>
+                              copyToClipboard(item.key, `key-${item.id}`, "Clave API")
+                            }
                             className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors cursor-pointer"
                             title="Copiar clave API"
                           >
@@ -371,7 +560,9 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                             title="Regenerar clave"
                           >
                             <RefreshCw
-                              className={`w-3.5 h-3.5 ${regeneratingId === item.id ? "animate-spin" : ""}`}
+                              className={`w-3.5 h-3.5 ${
+                                regeneratingId === item.id ? "animate-spin" : ""
+                              }`}
                             />
                           </button>
                           <button
@@ -390,7 +581,48 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                         {isVisible ? item.key : maskKey(item.key)}
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-2">
+                      {/* Interruptores de Permisos en Vivo */}
+                      <div
+                        className="mt-2.5 pt-2.5 border-t border-border/60"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Permisos de esta clave (clic para cambiar):
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {PERMISSION_DEFINITIONS.map((perm) => {
+                            const enabled = itemPerms.includes(perm.id);
+                            const isUpdating = updatingPermId === `${item.id}-${perm.id}`;
+                            return (
+                              <button
+                                key={perm.id}
+                                type="button"
+                                disabled={isUpdating}
+                                onClick={() => handleToggleKeyPermission(item, perm.id)}
+                                title={perm.description}
+                                className={`px-2 py-1 rounded border text-[11px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                                  enabled
+                                    ? perm.id === "delete"
+                                      ? "border-destructive/50 bg-destructive/10 text-destructive font-semibold"
+                                      : "border-primary bg-primary/15 text-foreground font-semibold"
+                                    : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {enabled ? (
+                                  <Check className="w-3 h-3 shrink-0" />
+                                ) : (
+                                  <Lock className="w-2.5 h-2.5 shrink-0 opacity-60" />
+                                )}
+                                <span className="truncate">{perm.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-2.5">
                         <span>
                           Creada: {new Date(item.createdAt).toLocaleDateString("es-CO")}
                         </span>
@@ -409,7 +641,7 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
           </div>
         </div>
 
-        {/* Columna Derecha: Enlace Dinámico y Configuración */}
+        {/* Columna Derecha: Enlace Dinámico, Configuración y Herramientas Autorizadas */}
         <div className="lg:col-span-7 space-y-4">
           {/* Card: Enlace MCP Dinámico */}
           <div className="border border-border bg-card p-5 rounded space-y-4">
@@ -428,7 +660,7 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
             </div>
 
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Este enlace incluye tu clave personal autenticada. Cualquier herramienta conectada con esta URL consultará y creará sermones exclusivamente en tu cuenta (<strong>{session.user?.email}</strong>).
+              Puedes modificar los permisos de tu clave en cualquier momento desde el panel izquierdo sin necesidad de cambiar ni volver a copiar este enlace.
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -453,6 +685,75 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                   </>
                 )}
               </button>
+            </div>
+          </div>
+
+          {/* Card: Herramientas Expuestas según Permisos Activos */}
+          <div className="border border-border bg-card p-5 rounded space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span>
+                  Herramientas Autorizadas para esta Clave ({allowedToolsCount} de {MCP_TOOLS_SUMMARY.length})
+                </span>
+              </h2>
+              <div className="flex items-center gap-1.5">
+                {PERMISSION_DEFINITIONS.map((perm) => {
+                  const active = activePermissions.includes(perm.id);
+                  return (
+                    <span
+                      key={perm.id}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                        active
+                          ? "border-primary/40 bg-primary/10 text-foreground"
+                          : "border-border bg-muted/40 text-muted-foreground line-through"
+                      }`}
+                    >
+                      {perm.label}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {MCP_TOOLS_SUMMARY.map((tool) => {
+                const isAllowed = activePermissions.includes(tool.scope);
+                return (
+                  <div
+                    key={tool.name}
+                    className={`p-2.5 rounded border flex flex-col gap-1 transition-opacity ${
+                      isAllowed
+                        ? "border-border/80 bg-background"
+                        : "border-border/40 bg-muted/30 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`font-mono text-xs font-semibold ${
+                          isAllowed ? "text-primary" : "text-muted-foreground line-through"
+                        }`}
+                      >
+                        {tool.name}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                          isAllowed
+                            ? "border-border bg-muted/50 text-foreground"
+                            : "border-border bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {!isAllowed && <Lock className="w-2.5 h-2.5" />}
+                        {tool.scope === "read" && isAllowed && <BookOpen className="w-2.5 h-2.5" />}
+                        {tool.scope === "write" && isAllowed && <PenLine className="w-2.5 h-2.5" />}
+                        {tool.scope === "delete" && isAllowed && <Trash2 className="w-2.5 h-2.5" />}
+                        <span>{tool.scopeLabel}</span>
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">{tool.desc}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -577,28 +878,6 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
                 </pre>
               </div>
             )}
-          </div>
-
-          {/* Card: Herramientas Disponibles */}
-          <div className="border border-border bg-card p-5 rounded space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Herramientas Expuestas por tu MCP ({MCP_TOOLS_SUMMARY.length})
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {MCP_TOOLS_SUMMARY.map((tool) => (
-                <div
-                  key={tool.name}
-                  className="p-2.5 rounded border border-border/80 bg-background flex flex-col gap-0.5"
-                >
-                  <span className="font-mono text-xs font-semibold text-primary">
-                    {tool.name}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {tool.desc}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

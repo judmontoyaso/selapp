@@ -132,14 +132,15 @@ model User {
 }
 
 model ApiKey {
-  id         String    @id @default(cuid())
-  key        String    @unique
-  name       String    @default("MCP Personal")
-  userId     String
-  createdAt  DateTime  @default(now())
-  lastUsedAt DateTime?
-  isActive   Boolean   @default(true)
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  key         String    @unique
+  name        String    @default("MCP Personal")
+  permissions String[]  @default(["read", "write"])
+  userId      String
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  isActive    Boolean   @default(true)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([key])
   @@index([userId])

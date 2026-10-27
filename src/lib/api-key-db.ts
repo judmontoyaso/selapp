@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 let tableEnsured = false;
 
 /**
- * Garantiza que la tabla "ApiKey" y sus índices existan en PostgreSQL
+ * Garantiza que la tabla "ApiKey", la columna "permissions" y sus índices existan en PostgreSQL
  * sin necesidad de correr migraciones manuales en el despliegue de Vercel.
  */
 export async function ensureApiKeyTable(): Promise<void> {
@@ -15,12 +15,18 @@ export async function ensureApiKeyTable(): Promise<void> {
         "id" TEXT NOT NULL PRIMARY KEY,
         "key" TEXT NOT NULL UNIQUE,
         "name" TEXT NOT NULL DEFAULT 'MCP Personal',
+        "permissions" TEXT[] NOT NULL DEFAULT ARRAY['read', 'write']::TEXT[],
         "userId" TEXT NOT NULL,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "lastUsedAt" TIMESTAMP(3),
         "isActive" BOOLEAN NOT NULL DEFAULT true,
         CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
       );
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "ApiKey"
+      ADD COLUMN IF NOT EXISTS "permissions" TEXT[] NOT NULL DEFAULT ARRAY['read', 'write']::TEXT[];
     `);
 
     await prisma.$executeRawUnsafe(`
@@ -33,7 +39,6 @@ export async function ensureApiKeyTable(): Promise<void> {
 
     tableEnsured = true;
   } catch (error) {
-    // Si ya existe o el usuario de BD tiene restricciones de DDL pero la tabla existe, continuamos
     console.warn("Notice checking ApiKey table:", error);
   }
 }

@@ -12,6 +12,20 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, x-mcp-key, x-user-email, Accept",
 };
 
+export type McpPermissionScope = "read" | "write" | "delete";
+
+// Mapa de permisos requeridos por cada herramienta MCP
+const TOOL_PERMISSION_MAP: Record<string, McpPermissionScope> = {
+  list_sermons: "read",
+  get_sermon: "read",
+  get_sermon_insights: "read",
+  search_sermon_notes: "read",
+  create_sermon: "write",
+  add_sermon_note: "write",
+  update_sermon: "write",
+  delete_sermon: "delete",
+};
+
 // Definición de herramientas (Tools) del MCP de Sermones
 const MCP_TOOLS = [
   {
@@ -187,6 +201,14 @@ const MCP_RESOURCES = [
   },
 ];
 
+interface AuthenticatedMcpUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  keyName: string;
+  permissions: string[];
+}
+
 // Extrae el token de autenticación desde Header Authorization, x-api-key o Query Params
 function extractToken(req: Request): string | null {
   const authHeader = req.headers.get("authorization");
@@ -213,8 +235,9 @@ function extractToken(req: Request): string | null {
 }
 
 // Resuelve un usuario de respaldo para la clave maestra de entorno (retrocompatibilidad)
-async function resolveLegacyEnvUser(req: Request): Promise<{ id: string; email: string; name?: string | null; keyName?: string } | null> {
+async function resolveLegacyEnvUser(req: Request): Promise<AuthenticatedMcpUser | null> {
   const url = new URL(req.url);
+  const fullPerms = ["read", "write", "delete"];
 
   const queryEmail = url.searchParams.get("email") || url.searchParams.get("userEmail");
   if (queryEmail) {
@@ -222,7 +245,7 @@ async function resolveLegacyEnvUser(req: Request): Promise<{ id: string; email: 
       where: { email: queryEmail.trim() },
       select: { id: true, email: true, name: true },
     });
-    if (user) return { ...user, keyName: "Env Master Key" };
+    if (user) return { ...user, keyName: "Env Master Key", permissions: fullPerms };
   }
 
   const headerEmail = req.headers.get("x-user-email");
@@ -231,7 +254,7 @@ async function resolveLegacyEnvUser(req: Request): Promise<{ id: string; email: 
       where: { email: headerEmail.trim() },
       select: { id: true, email: true, name: true },
     });
-    if (user) return { ...user, keyName: "Env Master Key" };
+    if (user) return { ...user, keyName: "Env Master Key", permissions: fullPerms };
   }
 
   const envEmail = process.env.MCP_USER_EMAIL;
@@ -240,20 +263,18 @@ async function resolveLegacyEnvUser(req: Request): Promise<{ id: string; email: 
       where: { email: envEmail.trim() },
       select: { id: true, email: true, name: true },
     });
-    if (user) return { ...user, keyName: "Env Master Key" };
+    if (user) return { ...user, keyName: "Env Master Key", permissions: fullPerms };
   }
 
   const firstUser = await prisma.user.findFirst({
     select: { id: true, email: true, name: true },
     orderBy: { email: "asc" },
   });
-  return firstUser ? { ...firstUser, keyName: "Env Master Key" } : null;
+  return firstUser ? { ...firstUser, keyName: "Env Master Key", permissions: fullPerms } : null;
 }
 
-// Autentica la petición validando primero la API Key dinámica por usuario en BD
-async function authenticateAndResolveUser(
-  req: Request
-): Promise<{ id: string; email: string; name?: string | null; keyName?: string } | null> {
+// Autentica la petición validando primero la API Key dinámica por usuario en BD y sus permisos
+async function authenticateAndResolveUser(req: Request): Promise<AuthenticatedMcpUser | null> {
   const token = extractToken(req);
 
   if (token) {
@@ -277,11 +298,17 @@ async function authenticateAndResolveUser(
         })
         .catch(() => {});
 
+      const permissions =
+        Array.isArray(apiKeyRecord.permissions) && apiKeyRecord.permissions.length > 0
+          ? apiKeyRecord.permissions
+          : ["read", "write"];
+
       return {
         id: apiKeyRecord.user.id,
         email: apiKeyRecord.user.email,
         name: apiKeyRecord.user.name,
         keyName: apiKeyRecord.name,
+        permissions,
       };
     }
 
@@ -293,6 +320,13 @@ async function authenticateAndResolveUser(
   }
 
   return null;
+}
+
+function getAllowedToolsForPermissions(permissions: string[]) {
+  return MCP_TOOLS.filter((tool) => {
+    const requiredPerm = TOOL_PERMISSION_MAP[tool.name] || "read";
+    return permissions.includes(requiredPerm);
+  });
 }
 
 // Ejecutor de Tools
@@ -617,9 +651,10 @@ async function executeTool(name: string, args: Record<string, any>, userId: stri
   }
 }
 
-// Procesa un mensaje JSON-RPC
-async function handleJsonRpc(req: Request, body: any, userId: string) {
+// Procesa un mensaje JSON-RPC respetando los permisos de la clave MCP
+async function handleJsonRpc(req: Request, body: any, authUser: AuthenticatedMcpUser) {
   const { jsonrpc, id, method, params } = body;
+  const { id: userId, permissions, keyName } = authUser;
 
   if (jsonrpc !== "2.0") {
     return {
@@ -643,27 +678,28 @@ async function handleJsonRpc(req: Request, body: any, userId: string) {
             },
             serverInfo: {
               name: "selapp-sermons-mcp",
-              version: "1.1.0",
+              version: "1.2.0",
             },
-            instructions: "Servidor MCP multi-usuario para gestión y consulta de notas de predicación y sermones en Selapp.",
+            instructions: `Servidor MCP de Selapp autenticado para ${authUser.email} (Permisos activos: ${permissions.join(", ")}).`,
           },
         };
 
       case "notifications/initialized":
-        // ACK sin contenido de respuesta
         return null;
 
       case "ping":
         return { jsonrpc: "2.0", id, result: {} };
 
-      case "tools/list":
+      case "tools/list": {
+        const allowedTools = getAllowedToolsForPermissions(permissions);
         return {
           jsonrpc: "2.0",
           id,
           result: {
-            tools: MCP_TOOLS,
+            tools: allowedTools,
           },
         };
+      }
 
       case "tools/call": {
         const { name, arguments: toolArgs } = params || {};
@@ -672,6 +708,31 @@ async function handleJsonRpc(req: Request, body: any, userId: string) {
             jsonrpc: "2.0",
             id,
             error: { code: -32602, message: "Parámetro 'name' es requerido para tools/call" },
+          };
+        }
+
+        const requiredPerm = TOOL_PERMISSION_MAP[name];
+        if (!requiredPerm) {
+          return {
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32601, message: `Herramienta desconocida: ${name}` },
+          };
+        }
+
+        if (!permissions.includes(requiredPerm)) {
+          return {
+            jsonrpc: "2.0",
+            id,
+            result: {
+              content: [
+                {
+                  type: "text",
+                  text: `Permiso denegado: Tu clave MCP ('${keyName}') solo tiene permisos [${permissions.join(", ")}] y no está autorizada para ejecutar '${name}' (requiere permiso '${requiredPerm}'). Puedes activar este permiso desde Selapp en /mcp.`,
+                },
+              ],
+              isError: true,
+            },
           };
         }
 
@@ -697,11 +758,19 @@ async function handleJsonRpc(req: Request, body: any, userId: string) {
           jsonrpc: "2.0",
           id,
           result: {
-            resources: MCP_RESOURCES,
+            resources: permissions.includes("read") ? MCP_RESOURCES : [],
           },
         };
 
       case "resources/read": {
+        if (!permissions.includes("read")) {
+          return {
+            jsonrpc: "2.0",
+            id,
+            error: { code: -32000, message: "Permiso de lectura ('read') requerido." },
+          };
+        }
+
         const uri = params?.uri;
         if (uri === "sermons://recent") {
           const recent = await executeTool("list_sermons", { limit: 10 }, userId);
@@ -801,13 +870,13 @@ export async function POST(request: Request) {
     if (Array.isArray(body)) {
       const results = [];
       for (const item of body) {
-        const res = await handleJsonRpc(request, item, user.id);
+        const res = await handleJsonRpc(request, item, user);
         if (res !== null) results.push(res);
       }
       return NextResponse.json(results, { headers: CORS_HEADERS });
     }
 
-    const response = await handleJsonRpc(request, body, user.id);
+    const response = await handleJsonRpc(request, body, user);
     if (response === null) {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
@@ -850,7 +919,6 @@ export async function GET(request: Request) {
 
     const stream = new ReadableStream({
       start(controller) {
-        // Enviar evento 'endpoint' según especificación MCP SSE transport
         controller.enqueue(new TextEncoder().encode(`event: endpoint\ndata: ${postEndpoint}\n\n`));
       },
     });
@@ -865,23 +933,26 @@ export async function GET(request: Request) {
     });
   }
 
+  const allowedTools = getAllowedToolsForPermissions(user.permissions);
+
   // Respuesta informativa si se abre en navegador o inspecciona por GET
   return NextResponse.json(
     {
       status: "online",
       server: "selapp-sermons-mcp",
-      version: "1.1.0",
-      description: "Servidor MCP multi-usuario para Sermones y Notas de Predicación de Selapp",
+      version: "1.2.0",
+      description: "Servidor MCP multi-usuario con control de permisos granulares para Selapp",
       authenticatedUser: {
         email: user.email,
         name: user.name || undefined,
         keyName: user.keyName,
+        permissions: user.permissions,
       },
       endpoint: "/api/mcp",
       supportedTransports: ["HTTP JSON-RPC 2.0 (POST)", "Server-Sent Events (GET)"],
-      toolsCount: MCP_TOOLS.length,
-      tools: MCP_TOOLS.map((t) => t.name),
-      resources: MCP_RESOURCES.map((r) => r.uri),
+      allowedToolsCount: allowedTools.length,
+      allowedTools: allowedTools.map((t) => t.name),
+      resources: user.permissions.includes("read") ? MCP_RESOURCES.map((r) => r.uri) : [],
     },
     { headers: CORS_HEADERS }
   );
