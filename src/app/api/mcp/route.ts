@@ -3,7 +3,13 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { stripHtml, extractReferences, BOOK_NAME_WORDS } from "@/lib/verse-extract";
 import { wordFrequencies } from "@/lib/word-stats";
-import { autoLinkBibleVerses } from "@/lib/youversion";
+import {
+  autoLinkBibleVerses,
+  BIBLE_VERSIONS,
+  getPassage,
+  parseReferenceToUSFM,
+  resolveVersion,
+} from "@/lib/youversion";
 import { ensureApiKeyTable } from "@/lib/api-key-db";
 
 const CORS_HEADERS = {
@@ -24,9 +30,13 @@ const TOOL_PERMISSION_MAP: Record<string, McpPermissionScope> = {
   add_sermon_note: "write",
   update_sermon: "write",
   delete_sermon: "delete",
+  list_favorite_verses: "read",
+  search_bible_verse: "read",
+  add_favorite_verse: "write",
+  delete_favorite_verse: "delete",
 };
 
-// Definición de herramientas (Tools) del MCP de Sermones
+// Definición de herramientas (Tools) del MCP de Selapp (Sermones y Versículos Favoritos)
 const MCP_TOOLS = [
   {
     name: "list_sermons",
@@ -183,6 +193,96 @@ const MCP_TOOLS = [
       required: ["query"],
     },
   },
+  {
+    name: "list_favorite_verses",
+    description: "Lista los versículos bíblicos favoritos guardados por el usuario, con opción de búsqueda por referencia, texto o tema.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        search: {
+          type: "string",
+          description: "Filtro opcional para buscar en la referencia (ej. Juan 3:16), texto o tema del versículo.",
+        },
+        tema: {
+          type: "string",
+          description: "Filtrar por tema específico (ej. Fe, Esperanza, Sabiduría).",
+        },
+        limit: {
+          type: "number",
+          description: "Cantidad máxima de versículos a devolver (por defecto 50, máximo 100).",
+        },
+      },
+    },
+  },
+  {
+    name: "search_bible_verse",
+    description: "Busca y obtiene el texto de cualquier pasaje o versículo bíblico por cita en español (ej. 'Juan 3:16', 'Salmos 23:1-4') y versión bíblica (nvi, ntv, rva, nbla, lbla).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        reference: {
+          type: "string",
+          description: "Cita bíblica en español (ej. 'Juan 3:16', 'Romanos 8:28', 'Salmos 23:1-3').",
+        },
+        version: {
+          type: "string",
+          description: "Versión bíblica: 'nvi' (por defecto), 'ntv', 'rva', 'nbla', 'lbla'.",
+        },
+      },
+      required: ["reference"],
+    },
+  },
+  {
+    name: "add_favorite_verse",
+    description: "Guarda un versículo bíblico en la lista de favoritos del usuario. Si solo se envía la cita bíblica (ej. 'Filipenses 4:13'), consulta automáticamente su texto y código USFM.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        reference: {
+          type: "string",
+          description: "Cita bíblica en español (ej. 'Juan 3:16', 'Salmos 23:1').",
+        },
+        tema: {
+          type: "string",
+          description: "Tema o categoría opcional para clasificar el versículo (ej. 'Fe', 'Promesas', 'Paz').",
+        },
+        version: {
+          type: "string",
+          description: "Versión bíblica para consultar el texto si no se provee ('nvi' por defecto, 'ntv', 'rva', 'nbla', 'lbla').",
+        },
+        texto: {
+          type: "string",
+          description: "Texto del versículo. Si se omite, se obtiene automáticamente desde la Biblia según la cita.",
+        },
+        usfm: {
+          type: "string",
+          description: "Código USFM opcional (ej. 'JHN.3.16'). Si se omite, se calcula automáticamente desde la referencia.",
+        },
+      },
+      required: ["reference"],
+    },
+  },
+  {
+    name: "delete_favorite_verse",
+    description: "Elimina un versículo de la lista de favoritos del usuario usando su ID, código USFM (ej. 'JHN.3.16') o cita bíblica (ej. 'Juan 3:16').",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID numérico del versículo favorito a eliminar.",
+        },
+        usfm: {
+          type: "string",
+          description: "Código USFM del versículo favorito (ej. 'JHN.3.16').",
+        },
+        reference: {
+          type: "string",
+          description: "Cita bíblica en español (ej. 'Juan 3:16') para identificar el favorito a eliminar.",
+        },
+      },
+    },
+  },
 ];
 
 // Definición de recursos (Resources) del MCP
@@ -197,6 +297,12 @@ const MCP_RESOURCES = [
     uri: "sermons://insights",
     name: "Estadísticas Globales de Sermones",
     description: "Estadísticas acumuladas: libros y versículos más citados, y palabras frecuentes.",
+    mimeType: "application/json",
+  },
+  {
+    uri: "verses://favorites",
+    name: "Versículos Favoritos",
+    description: "Lista completa de los versículos bíblicos favoritos guardados por el usuario.",
     mimeType: "application/json",
   },
 ];
@@ -646,6 +752,221 @@ async function executeTool(name: string, args: Record<string, any>, userId: stri
       };
     }
 
+    case "list_favorite_verses": {
+      const search = (args.search as string)?.trim() || "";
+      const tema = (args.tema as string)?.trim() || "";
+      const limit = Math.min(100, Math.max(1, Number(args.limit) || 50));
+
+      const whereClause: Prisma.versiculos_favoritosWhereInput = {
+        user_id: userId,
+        ...(tema ? { tema: { contains: tema, mode: "insensitive" } } : {}),
+        ...(search
+          ? {
+              OR: [
+                { referencia: { contains: search, mode: "insensitive" } },
+                { texto: { contains: search, mode: "insensitive" } },
+                { tema: { contains: search, mode: "insensitive" } },
+                { usfm: { contains: search, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      };
+
+      const [total, favoritos] = await Promise.all([
+        prisma.versiculos_favoritos.count({ where: whereClause }),
+        prisma.versiculos_favoritos.findMany({
+          where: whereClause,
+          orderBy: { creado_en: "desc" },
+          take: limit,
+        }),
+      ]);
+
+      return {
+        total,
+        returned: favoritos.length,
+        favorites: favoritos.map((f) => {
+          const versionInfo = Object.values(BIBLE_VERSIONS).find((v) => v.id === f.bible_id);
+          return {
+            id: f.id.toString(),
+            referencia: f.referencia,
+            usfm: f.usfm,
+            bible_id: f.bible_id,
+            version: versionInfo?.abbreviation || "NVI",
+            texto: f.texto,
+            tema: f.tema,
+            creado_en: f.creado_en,
+          };
+        }),
+      };
+    }
+
+    case "search_bible_verse": {
+      const referenceInput = String(args.reference || "").trim();
+      if (!referenceInput) throw new Error("El parámetro 'reference' es requerido (ej. 'Juan 3:16').");
+
+      const bible = resolveVersion(args.version ? String(args.version) : undefined);
+      const usfm = parseReferenceToUSFM(referenceInput);
+      if (!usfm) {
+        throw new Error(
+          `No se reconoció la cita bíblica '${referenceInput}'. Usa formato en español como 'Juan 3:16' o 'Salmos 23:1-3'.`
+        );
+      }
+
+      const passage = await getPassage(usfm, "text", bible.key);
+      const existingFav = await prisma.versiculos_favoritos.findUnique({
+        where: { user_id_usfm: { user_id: userId, usfm } },
+      });
+
+      return {
+        reference: passage.reference || referenceInput,
+        usfm,
+        text: passage.content,
+        bible_id: bible.id,
+        version: bible.key,
+        abbreviation: bible.abbreviation,
+        translation: bible.name,
+        isFavorite: !!existingFav,
+        favoriteId: existingFav ? existingFav.id.toString() : null,
+      };
+    }
+
+    case "add_favorite_verse": {
+      const referenceInput = String(args.reference || "").trim();
+      if (!referenceInput) throw new Error("El parámetro 'reference' es requerido (ej. 'Juan 3:16').");
+
+      const bible = resolveVersion(args.version ? String(args.version) : undefined);
+      const usfmInput = args.usfm ? String(args.usfm).trim().toUpperCase() : null;
+      const usfm = usfmInput || parseReferenceToUSFM(referenceInput);
+
+      if (!usfm) {
+        throw new Error(
+          `No se pudo determinar el código USFM para '${referenceInput}'. Asegúrate de indicar una cita válida (ej. 'Filipenses 4:13') o proveer el parámetro 'usfm'.`
+        );
+      }
+
+      let finalReference = referenceInput;
+      let finalTexto = args.texto ? String(args.texto).trim() : "";
+
+      if (!finalTexto) {
+        const passage = await getPassage(usfm, "text", bible.key);
+        finalTexto = passage.content;
+        if (passage.reference) {
+          finalReference = passage.reference;
+        }
+      }
+
+      const tema = args.tema ? String(args.tema).trim() : null;
+
+      const existing = await prisma.versiculos_favoritos.findUnique({
+        where: { user_id_usfm: { user_id: userId, usfm } },
+      });
+
+      if (existing) {
+        const updated =
+          tema && tema !== existing.tema
+            ? await prisma.versiculos_favoritos.update({
+                where: { id: existing.id },
+                data: { tema },
+              })
+            : existing;
+
+        return {
+          duplicate: true,
+          message: "El versículo ya se encontraba en tu lista de favoritos.",
+          favorite: {
+            id: updated.id.toString(),
+            referencia: updated.referencia,
+            usfm: updated.usfm,
+            bible_id: updated.bible_id,
+            texto: updated.texto,
+            tema: updated.tema,
+            creado_en: updated.creado_en,
+          },
+        };
+      }
+
+      const created = await prisma.versiculos_favoritos.create({
+        data: {
+          user_id: userId,
+          referencia: finalReference,
+          usfm,
+          bible_id: bible.id,
+          texto: finalTexto,
+          tema,
+        },
+      });
+
+      return {
+        duplicate: false,
+        message: "Versículo guardado en favoritos exitosamente.",
+        favorite: {
+          id: created.id.toString(),
+          referencia: created.referencia,
+          usfm: created.usfm,
+          bible_id: created.bible_id,
+          version: bible.abbreviation,
+          texto: created.texto,
+          tema: created.tema,
+          creado_en: created.creado_en,
+        },
+      };
+    }
+
+    case "delete_favorite_verse": {
+      const idArg = args.id !== undefined && args.id !== null ? String(args.id).trim() : "";
+      const usfmArg = args.usfm ? String(args.usfm).trim().toUpperCase() : "";
+      const refArg = args.reference ? String(args.reference).trim() : "";
+
+      if (!idArg && !usfmArg && !refArg) {
+        throw new Error(
+          "Debes proporcionar al menos 'id', 'usfm' (ej. 'JHN.3.16') o 'reference' (ej. 'Juan 3:16') para eliminar un favorito."
+        );
+      }
+
+      let target = null;
+
+      if (idArg && /^\d+$/.test(idArg)) {
+        target = await prisma.versiculos_favoritos.findUnique({
+          where: { id: BigInt(idArg) },
+        });
+      }
+
+      if (!target && (usfmArg || refArg)) {
+        const resolvedUsfm = usfmArg || parseReferenceToUSFM(refArg) || "";
+        if (resolvedUsfm) {
+          target = await prisma.versiculos_favoritos.findUnique({
+            where: { user_id_usfm: { user_id: userId, usfm: resolvedUsfm } },
+          });
+        }
+      }
+
+      if (!target && refArg) {
+        target = await prisma.versiculos_favoritos.findFirst({
+          where: {
+            user_id: userId,
+            referencia: { equals: refArg, mode: "insensitive" },
+          },
+        });
+      }
+
+      if (!target || target.user_id !== userId) {
+        throw new Error("Versículo favorito no encontrado en la cuenta del usuario.");
+      }
+
+      await prisma.versiculos_favoritos.delete({
+        where: { id: target.id },
+      });
+
+      return {
+        success: true,
+        deletedFavorite: {
+          id: target.id.toString(),
+          referencia: target.referencia,
+          usfm: target.usfm,
+        },
+      };
+    }
+
     default:
       throw new Error(`Herramienta desconocida: ${name}`);
   }
@@ -677,10 +998,10 @@ async function handleJsonRpc(req: Request, body: any, authUser: AuthenticatedMcp
               resources: { subscribe: false, listChanged: false },
             },
             serverInfo: {
-              name: "selapp-sermons-mcp",
-              version: "1.2.0",
+              name: "selapp-mcp",
+              version: "1.3.0",
             },
-            instructions: `Servidor MCP de Selapp autenticado para ${authUser.email} (Permisos activos: ${permissions.join(", ")}).`,
+            instructions: `Servidor MCP de Selapp (Sermones y Versículos Favoritos) autenticado para ${authUser.email} (Permisos activos: ${permissions.join(", ")}).`,
           },
         };
 
@@ -799,6 +1120,22 @@ async function handleJsonRpc(req: Request, body: any, authUser: AuthenticatedMcp
                   uri,
                   mimeType: "application/json",
                   text: JSON.stringify(insights, null, 2),
+                },
+              ],
+            },
+          };
+        }
+        if (uri === "verses://favorites") {
+          const favorites = await executeTool("list_favorite_verses", { limit: 100 }, userId);
+          return {
+            jsonrpc: "2.0",
+            id,
+            result: {
+              contents: [
+                {
+                  uri,
+                  mimeType: "application/json",
+                  text: JSON.stringify(favorites, null, 2),
                 },
               ],
             },
@@ -939,9 +1276,9 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       status: "online",
-      server: "selapp-sermons-mcp",
-      version: "1.2.0",
-      description: "Servidor MCP multi-usuario con control de permisos granulares para Selapp",
+      server: "selapp-mcp",
+      version: "1.3.0",
+      description: "Servidor MCP multi-usuario con control de permisos granulares para Selapp (Sermones y Versículos Favoritos)",
       authenticatedUser: {
         email: user.email,
         name: user.name || undefined,

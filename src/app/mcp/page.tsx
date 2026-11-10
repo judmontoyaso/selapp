@@ -45,18 +45,18 @@ const PERMISSION_DEFINITIONS: {
   {
     id: "read",
     label: "Lectura",
-    description: "Consultar sermones, notas y estadísticas",
+    description: "Consultar sermones, notas, estadísticas y versículos favoritos",
     required: true,
   },
   {
     id: "write",
     label: "Escritura",
-    description: "Crear sermones, añadir apuntes y editar",
+    description: "Crear sermones, añadir apuntes y guardar versículos favoritos",
   },
   {
     id: "delete",
     label: "Eliminación",
-    description: "Borrar sermones permanentemente",
+    description: "Borrar sermones o eliminar versículos favoritos",
   },
 ];
 
@@ -91,6 +91,18 @@ const MCP_TOOLS_SUMMARY: {
     scopeLabel: "Lectura",
   },
   {
+    name: "list_favorite_verses",
+    desc: "Lista y filtra tus versículos bíblicos favoritos por cita, texto o tema",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
+    name: "search_bible_verse",
+    desc: "Consulta cualquier pasaje bíblico por cita y versión (NVI, NTV, RVA...)",
+    scope: "read",
+    scopeLabel: "Lectura",
+  },
+  {
     name: "create_sermon",
     desc: "Crea un nuevo sermón con notas iniciales y vinculación bíblica",
     scope: "write",
@@ -109,8 +121,20 @@ const MCP_TOOLS_SUMMARY: {
     scopeLabel: "Escritura",
   },
   {
+    name: "add_favorite_verse",
+    desc: "Guarda un versículo en tus favoritos obteniendo su texto automáticamente",
+    scope: "write",
+    scopeLabel: "Escritura",
+  },
+  {
     name: "delete_sermon",
     desc: "Elimina un sermón y sus notas de tu cuenta",
+    scope: "delete",
+    scopeLabel: "Eliminación",
+  },
+  {
+    name: "delete_favorite_verse",
+    desc: "Elimina un versículo de tu lista de favoritos por ID, USFM o cita",
     scope: "delete",
     scopeLabel: "Eliminación",
   },
@@ -392,7 +416,7 @@ Authorization: Bearer ${activeKey ? activeKey.key : "TU_CLAVE_API"}`;
             Conexión MCP, Claves y Permisos por Usuario
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Conecta Claude Desktop, Cursor o cualquier cliente MCP con tus sermones y controla qué acciones tiene permitidas cada clave.
+            Conecta Claude Desktop, Cursor o cualquier cliente MCP con tus sermones y versículos favoritos, y controla qué acciones tiene permitidas cada clave.
           </p>
         </div>
 
